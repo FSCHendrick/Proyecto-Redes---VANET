@@ -35,11 +35,13 @@ while ejecutando:
         if event.type == pygame.QUIT:
             ejecutando = False
 
-    # --- Movimiento de vehículos y comunicación VANET ---
+    # Para cada vehículo: detectar semáforo, mover y enviar mensaje (una sola vez)
     for v in vehiculos:
-        v.mover()  # actualizar posición
+        v.detectar_semaforo(semaforos)
+        v.mover()
         for s in semaforos:
             ProtocoloVANET.enviar(v.generar_mensaje(), s)
+
 
     # --- Actualizar los semáforos ---
     for s in semaforos:
@@ -50,19 +52,19 @@ while ejecutando:
     time_now = pygame.time.get_ticks()  # tiempo actual en milisegundos
 
     # Cambiar color cada 5 segundos
-    if traffic_light == "verde" and time_now - last_switch > 2000:
+    if traffic_light == "verde" and time_now - last_switch > 4000:
         traffic_light = "amarillo1"  # amarillo antes de rojo
         last_switch = time_now
-    elif traffic_light == "amarillo1" and time_now - last_switch > 1000:
+    elif traffic_light == "amarillo1" and time_now - last_switch > 2000:
         traffic_light = "rojo"
         last_switch = time_now
-    elif traffic_light == "rojo" and time_now - last_switch > 2000:
+    elif traffic_light == "rojo" and time_now - last_switch > 4000:
         traffic_light = "amarillo2"  # amarillo antes de verde
         last_switch = time_now
-    elif traffic_light == "amarillo2" and time_now - last_switch > 1000:
+    elif traffic_light == "amarillo2" and time_now - last_switch > 2000:
         traffic_light = "verde"
         last_switch = time_now
-    print("Cambio semáforo a", traffic_light, "en", time_now)
+        # --- print("Cambio semáforo a", traffic_light, "en", time_now)
 
     # Aplicar el nuevo color a todos los semáforos
     for s in semaforos:

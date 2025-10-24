@@ -21,5 +21,12 @@ def dibujar_cruce(pantalla, vehiculos, semaforos):
 
     # Dibujar vehículos
     for v in vehiculos:
+        # Color: azul normal, amarillo emergencia
         color = (0, 0, 255) if v.tipo == "normal" else (255, 255, 0)
+
+        # Si la velocidad es baja (amarillo1), hacerlo más tenue
+        if v.velocidad < v.velocidad_normal:
+            color = tuple(min(255, int(c * 0.5)) for c in color)  # más oscuro
+        # Dibujar el rectángulo del vehículo
         pygame.draw.rect(pantalla, color, (v.x, v.y, 20, 10))
+
