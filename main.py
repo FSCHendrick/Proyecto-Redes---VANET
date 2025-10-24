@@ -50,10 +50,19 @@ while ejecutando:
     time_now = pygame.time.get_ticks()  # tiempo actual en milisegundos
 
     # Cambiar color cada 5 segundos
-    if time_now - last_switch > 5000:
-        traffic_light = "verde" if traffic_light == "rojo" else "rojo"
+    if traffic_light == "verde" and time_now - last_switch > 2000:
+        traffic_light = "amarillo1"  # amarillo antes de rojo
         last_switch = time_now
-        # --- print("Cambio semáforo a", traffic_light, "en", time_now)
+    elif traffic_light == "amarillo1" and time_now - last_switch > 1000:
+        traffic_light = "rojo"
+        last_switch = time_now
+    elif traffic_light == "rojo" and time_now - last_switch > 2000:
+        traffic_light = "amarillo2"  # amarillo antes de verde
+        last_switch = time_now
+    elif traffic_light == "amarillo2" and time_now - last_switch > 1000:
+        traffic_light = "verde"
+        last_switch = time_now
+    print("Cambio semáforo a", traffic_light, "en", time_now)
 
     # Aplicar el nuevo color a todos los semáforos
     for s in semaforos:

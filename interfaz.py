@@ -11,7 +11,12 @@ def dibujar_cruce(pantalla, vehiculos, semaforos):
 
     # Dibujar semáforos
     for s in semaforos:
-        color = (0,255,0) if s.estado == "verde" else (255,0,0)
+        if s.estado == "verde":
+            color = (0, 255, 0)
+        elif s.estado in ["amarillo1", "amarillo2"]:
+            color = (255, 255, 0)
+        else:
+            color = (255, 0, 0)
         pygame.draw.circle(pantalla, color, (s.x, s.y), 15)
 
     # Dibujar vehículos
