@@ -53,6 +53,10 @@ class Vehiculo:
         # Tomar solo el semáforo más cercano
         closest_s = min(semaforos, key=lambda s: math.hypot(self.x - s.x, self.y - s.y))
         distancia = math.hypot(self.x - closest_s.x, self.y - closest_s.y)
+        # --- DEBUG: solo para ver cómo los del eje N-S perciben el semáforo ---
+        if self.id in [6, 7, 8, 9]:  # vehículos del eje Norte-Sur
+            print(f"[DEBUG Veh {self.id}] ve semáforo {closest_s.id} ({closest_s.estado}) a {distancia:.1f}px")
+
 
         if closest_s.estado == "verde":
             self.moviendo = True
@@ -78,5 +82,8 @@ class Vehiculo:
             "id": self.id,
             "tipo": self.tipo,
             "posicion": (self.x, self.y),
-            "direccion": self.direccion
+            "direccion": self.direccion,
+            "velocidad": self.velocidad,
+            "estado_movimiento": "moviéndose" if self.moviendo else "detenido"
         }
+
