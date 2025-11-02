@@ -28,9 +28,9 @@ for i in range(10):  # crea 10 vehículos
         x, y = random.randint(50, 200), 260
     elif dir == "W":
         x, y = random.randint(600, 750), 320
-    elif dir == "N":
+    elif dir == "S":
         x, y = 390, random.randint(50, 200)
-    else:  # S
+    else:  # N
         x, y = 410, random.randint(400, 550)
     vehiculos.append(Vehiculo(i+1, tipo, x, y, dir))
 
