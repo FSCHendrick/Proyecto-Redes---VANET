@@ -30,3 +30,18 @@ def dibujar_cruce(pantalla, vehiculos, semaforos):
         # Dibujar el rectángulo del vehículo
         pygame.draw.rect(pantalla, color, (v.x, v.y, 20, 10))
 
+        # mostrar el ID del vehículo sobre él
+        font = pygame.font.Font(None, 18)
+        text = font.render(str(v.id), True, (255, 255, 255))
+        pantalla.blit(text, (v.x, v.y - 12))  # ID encima del vehículo
+
+    # mostrar leyenda de colores en la esquina
+    font = pygame.font.Font(None, 22)
+    pantalla.blit(font.render("Leyenda:", True, (255, 255, 255)), (10, 10))
+    pantalla.blit(font.render("Azul = Auto normal", True, (0, 0, 255)), (10, 35))
+    pantalla.blit(font.render("Amarillo = Emergencia", True, (255, 255, 0)), (10, 60))
+    pantalla.blit(font.render("Verde = Avanza", True, (0, 255, 0)), (10, 85))
+    pantalla.blit(font.render("Rojo = Detenerse", True, (255, 0, 0)), (10, 110))
+    pantalla.blit(font.render("Amarillo = Precaución", True, (255, 255, 0)), (10, 135))
+
+

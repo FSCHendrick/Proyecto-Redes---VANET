@@ -3,6 +3,7 @@ from vehiculo import Vehiculo
 from semaforo import Semaforo
 from protocolo import ProtocoloVANET
 from interfaz import dibujar_cruce, ANCHO, ALTO
+import random
 
 # Inicializar pygame y la ventana
 pygame.init()
@@ -16,10 +17,23 @@ semaforos = [
 ]
 
 # Crear vehículos (id, tipo, posición x, posición y, dirección)
-vehiculos = [
-    Vehiculo(1, "normal", 100, 260, "E"),      # Este va hacia la derecha
-    Vehiculo(2, "emergencia", 700, 320, "W"),  # Este va hacia la izquierda
-]
+vehiculos = []
+direcciones = ["E", "W", "N", "S"]
+tipos = ["normal", "normal", "emergencia"]  # más probabilidad de autos normales
+
+for i in range(10):  # crea 10 vehículos
+    tipo = random.choice(tipos)
+    dir = random.choice(direcciones)
+    if dir == "E":
+        x, y = random.randint(50, 200), 260
+    elif dir == "W":
+        x, y = random.randint(600, 750), 320
+    elif dir == "N":
+        x, y = 390, random.randint(50, 200)
+    else:  # S
+        x, y = 410, random.randint(400, 550)
+    vehiculos.append(Vehiculo(i+1, tipo, x, y, dir))
+
 
 clock = pygame.time.Clock()
 ejecutando = True
@@ -51,19 +65,20 @@ while ejecutando:
     # --- Control automático del semáforo ---
     time_now = pygame.time.get_ticks()  # tiempo actual en milisegundos
 
-    # Cambiar color cada 5 segundos
-    if traffic_light == "verde" and time_now - last_switch > 4000:
-        traffic_light = "amarillo1"  # amarillo antes de rojo
+    # Ciclo de semáforo más estable (6s verde, 2s amarillo, 5s rojo)
+    if traffic_light == "verde" and time_now - last_switch > 6000:
+        traffic_light = "amarillo1"
         last_switch = time_now
     elif traffic_light == "amarillo1" and time_now - last_switch > 2000:
         traffic_light = "rojo"
         last_switch = time_now
-    elif traffic_light == "rojo" and time_now - last_switch > 4000:
-        traffic_light = "amarillo2"  # amarillo antes de verde
+    elif traffic_light == "rojo" and time_now - last_switch > 5000:
+        traffic_light = "amarillo2"
         last_switch = time_now
     elif traffic_light == "amarillo2" and time_now - last_switch > 2000:
         traffic_light = "verde"
         last_switch = time_now
+
         # --- print("Cambio semáforo a", traffic_light, "en", time_now)
 
     # Aplicar el nuevo color a todos los semáforos
