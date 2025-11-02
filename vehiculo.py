@@ -1,4 +1,5 @@
 import math
+from semaforo import Semaforo
 
 class Vehiculo:
     def __init__(self, id, tipo, x, y, direccion):
@@ -25,53 +26,73 @@ class Vehiculo:
             self.y += self.velocidad
 
     def detectar_semaforo(self, semaforos):
-        """
-        Detiene o reduce la velocidad del vehículo según el color del semáforo más cercano.
-        Comportamiento:
-        - verde: velocidad normal
-        - amarillo1: reducción parcial
-        - amarillo2: detener (como rojo)
-        - rojo: detener
-        - emergencias: mantienen velocidad normal
-        """
-        UMBRAL_DETECCION = 100
-        FACTOR_AMARILLO = 0.4
-        MARGEN_SEGURO = 30
+    
+    #Controla el comportamiento del vehículo frente al semáforo más cercano.
 
-        # Emergencia siempre avanza a velocidad normal
+    #Reglas:
+    #- Verde: velocidad normal.
+    #- Amarillo: reduce velocidad (solo si está a distancia media).
+    #- Rojo: se detiene antes del cruce.
+    #- Vehículos de emergencia: siempre avanzan a velocidad normal.
+
+    #También evita que los autos se detengan justo en la intersección.
+    
+
+    # --- Parámetros ajustables ---
+        UMBRAL_DETECCION = 120     # distancia máxima para "ver" el semáforo
+        FACTOR_AMARILLO = 0.4      # porcentaje de reducción de velocidad
+        DISTANCIA_DETENCION = 60   # punto donde el vehículo debe detenerse antes del cruce
+        MARGEN_CRUCE = 25          # permite pasar si ya está muy cerca del cruce
+
+        # --- Regla especial: vehículos de emergencia ---
         if self.tipo == "emergencia":
             self.moviendo = True
             self.velocidad = self.velocidad_normal
             return
 
-        # Si no hay semáforo cercano, avanzar normalmente
+        # --- Si no hay semáforos, avanzar normalmente ---
         if not semaforos:
             self.moviendo = True
             self.velocidad = self.velocidad_normal
             return
 
-        # Tomar solo el semáforo más cercano
+        # --- Buscar el semáforo más cercano ---
         closest_s = min(semaforos, key=lambda s: math.hypot(self.x - s.x, self.y - s.y))
         distancia = math.hypot(self.x - closest_s.x, self.y - closest_s.y)
 
+        # Si está fuera del rango de detección, avanzar sin cambios
+        if distancia > UMBRAL_DETECCION:
+            self.moviendo = True
+            self.velocidad = self.velocidad_normal
+            return
+
+        # --- Lógica según el color del semáforo ---
         if closest_s.estado == "verde":
             self.moviendo = True
             self.velocidad = self.velocidad_normal
-        elif closest_s.estado == "amarillo1":
-            # Si está muy cerca del semáforo, se puede mantener velocidad normal
-            if distancia <= MARGEN_SEGURO:
+
+        elif closest_s.estado in ["amarillo1", "amarillo2"]:
+            # Reducir velocidad si está a distancia media
+            if distancia > DISTANCIA_DETENCION:
                 self.moviendo = True
-                self.velocidad = self.velocidad_normal
+                self.velocidad = self.velocidad_normal * FACTOR_AMARILLO
             else:
                 self.moviendo = True
-                self.velocidad = max(0.1, self.velocidad_normal * FACTOR_AMARILLO)
-        elif closest_s.estado in ["rojo", "amarillo2"]:
-            if distancia <= MARGEN_SEGURO:
-                self.moviendo = True  # deja cruzar si ya está muy cerca
-                self.velocidad = self.velocidad_normal
-            else:
+                self.velocidad = self.velocidad_normal  # si ya está cerca, puede pasar
+
+        elif closest_s.estado == "rojo":
+            # Solo detener si todavía no llegó al cruce
+            if distancia > DISTANCIA_DETENCION:
                 self.moviendo = False
                 self.velocidad = 0
+        elif distancia <= MARGEN_CRUCE:
+            # Si ya está muy cerca, dejarlo pasar para evitar bloqueo en el cruce
+            self.moviendo = True
+            self.velocidad = self.velocidad_normal
+        else:
+            self.moviendo = False
+            self.velocidad = 0
+
 
     def generar_mensaje(self):
         return {
