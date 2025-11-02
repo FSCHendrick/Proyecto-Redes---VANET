@@ -49,9 +49,11 @@ ejecutando = True
 
 # Estado inicial general de los semáforos
 estado_general = {
-    "H": "verde",   # Los semáforos horizontales comienzan en verde
-    "V": "rojo"     # Los verticales comienzan en rojo
+    "H": "verde",   # semáforos horizontales inician en verde
+    "V": "rojo",    # semáforos verticales en rojo
+    "fase": 1       # indica en qué etapa del ciclo estamos
 }
+
 
 last_switch = 0  # Momento del último cambio
 intervalo = 6000  # Duración de cada ciclo (6 segundos aprox)
@@ -80,18 +82,38 @@ while ejecutando:
 
     # --- Control automático del semáforo ---
     time_now = pygame.time.get_ticks()
+    elapsed = time_now - last_switch
 
-    # Cambiar el estado cada cierto tiempo
-    if time_now - last_switch > intervalo:
-        # Intercambiar los colores
-        if estado_general["H"] == "verde":
+    # Fase 1 y 2: Horizontal tiene prioridad
+    if estado_general["fase"] == 1:  # Horizontal verde
+        if elapsed > 6000:
+            estado_general["H"] = "amarillo"
+            estado_general["V"] = "rojo"
+            estado_general["fase"] = 2
+            last_switch = time_now
+
+    elif estado_general["fase"] == 2:  # Horizontal amarillo
+        if elapsed > 3000:
             estado_general["H"] = "rojo"
             estado_general["V"] = "verde"
-        else:
+            estado_general["fase"] = 3
+            last_switch = time_now
+
+    # Fase 3 y 4: Vertical tiene prioridad
+    elif estado_general["fase"] == 3:  # Vertical verde
+        if elapsed > 6000:
+            estado_general["H"] = "rojo"
+            estado_general["V"] = "amarillo"
+            estado_general["fase"] = 4
+            last_switch = time_now
+
+    elif estado_general["fase"] == 4:  # Vertical amarillo
+        if elapsed > 3000:
             estado_general["H"] = "verde"
             estado_general["V"] = "rojo"
+            estado_general["fase"] = 1
+            last_switch = time_now
 
-        last_switch = time_now
 
 
 
