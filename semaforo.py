@@ -8,23 +8,24 @@ class Semaforo:
         self.vehiculos_detectados = []
 
     def recibir_datos(self, mensaje):
+        """Recibe información de vehículos cercanos."""
         self.vehiculos_detectados.append(mensaje)
 
     def actualizar_estado(self, estado_general):
-        # (Puedes dejar esto si luego quieres volver a usarlo)
+        """
+        Actualiza el estado del semáforo:
+        - Se sincroniza con el estado general de su línea.
+        - Prioridad: si hay un vehículo de emergencia, se pone verde.
+        """
+        # Sincronizar con estado general
+        self.estado = estado_general[self.linea]
+
+        # Prioridad: emergencia
         for v in self.vehiculos_detectados:
             if v["tipo"] == "emergencia":
                 self.estado = "verde"
-                return
-        if len(self.vehiculos_detectados) > 3:
-            self.estado = "verde"
-        else:
-            self.estado = "rojo"
-        # Sincroniza el semáforo según su línea
-        if self.linea == "H":
-            self.estado = estado_general["H"]
-        else:
-            self.estado = estado_general["V"]
+                break
 
     def limpiar_datos(self):
+        """Limpia la lista de vehículos detectados para el siguiente ciclo."""
         self.vehiculos_detectados = []
