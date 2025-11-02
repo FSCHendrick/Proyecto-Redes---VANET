@@ -38,10 +38,12 @@ def dibujar_cruce(pantalla, vehiculos, semaforos):
     # mostrar leyenda de colores en la esquina
     font = pygame.font.Font(None, 22)
     pantalla.blit(font.render("Leyenda:", True, (255, 255, 255)), (10, 10))
-    pantalla.blit(font.render("Azul = Auto normal", True, (0, 0, 255)), (10, 35))
-    pantalla.blit(font.render("Amarillo = Emergencia", True, (255, 255, 0)), (10, 60))
-    pantalla.blit(font.render("Verde = Avanza", True, (0, 255, 0)), (10, 85))
-    pantalla.blit(font.render("Rojo = Detenerse", True, (255, 0, 0)), (10, 110))
-    pantalla.blit(font.render("Amarillo = Precaución", True, (255, 255, 0)), (10, 135))
+    pantalla.blit(font.render("AUTOS", True, (255, 255, 255)), (10, 35))
+    pantalla.blit(font.render("Azul = Auto normal", True, (0, 0, 255)), (10, 60))
+    pantalla.blit(font.render("Amarillo = Emergencia", True, (255, 255, 0)), (10, 85))
+    pantalla.blit(font.render("SEMÁFORO", True, (255, 255, 255)), (10, 110))
+    pantalla.blit(font.render("Verde = Avanza", True, (0, 255, 0)), (10, 135))
+    pantalla.blit(font.render("Rojo = Detenerse", True, (255, 0, 0)), (10, 160))
+    pantalla.blit(font.render("Amarillo = Precaución", True, (255, 255, 0)), (10, 185))
 
 

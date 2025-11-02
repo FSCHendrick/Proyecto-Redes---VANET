@@ -22,7 +22,7 @@ vehiculos = []
 direcciones = ["E", "W", "N", "S"]
 tipos = ["normal", "normal", "emergencia"]  # más probabilidad de autos normales
 
-for i in range(10):  # crea 10 vehículos
+for i in range(15):  # crea 15 vehículos
     tipo = random.choice(tipos)
     dir = random.choice(direcciones)
     
@@ -47,13 +47,8 @@ clock = pygame.time.Clock()
 ejecutando = True
 
 # Estado inicial de los semáforos
-estado_general = {
-    "H": "verde",   # Horizontales comienzan en verde
-    "V": "rojo",    # Verticales comienzan en rojo
-    "fase": 1       # Fase inicial del ciclo
-}
-
-# Tiempos de cambio (en milisegundos)
+estado_general = {"H": "verde", "V": "rojo"}
+fase = "H_verde"
 last_switch = 0
 intervalo_verde = 6000
 intervalo_amarillo = 3000
@@ -73,6 +68,36 @@ while ejecutando:
         v.mover()
         for s in semaforos:
             ProtocoloVANET.enviar(v.generar_mensaje(), s)
+    
+
+
+
+    # --- Control automático del semáforo ---
+    time_now = pygame.time.get_ticks()
+
+    if fase == "H_verde" and time_now - last_switch > intervalo_verde:
+        estado_general["H"] = "amarillo1"
+        estado_general["V"] = "rojo"
+        fase = "H_amarillo"
+        last_switch = time_now
+
+    elif fase == "H_amarillo" and time_now - last_switch > intervalo_amarillo:
+        estado_general["H"] = "rojo"
+        estado_general["V"] = "verde"
+        fase = "V_verde"
+        last_switch = time_now
+
+    elif fase == "V_verde" and time_now - last_switch > intervalo_verde:
+        estado_general["V"] = "amarillo2"
+        estado_general["H"] = "rojo"
+        fase = "V_amarillo"
+        last_switch = time_now
+
+    elif fase == "V_amarillo" and time_now - last_switch > intervalo_amarillo:
+        estado_general["V"] = "rojo"
+        estado_general["H"] = "verde"
+        fase = "H_verde"
+        last_switch = time_now
 
 
     # --- Actualizar los semáforos ---
@@ -80,41 +105,10 @@ while ejecutando:
         s.actualizar_estado(estado_general)
         s.limpiar_datos()
 
-
-    # --- Control automático del semáforo ---
-    time_now = pygame.time.get_ticks()
-    elapsed = time_now - last_switch
-
-    # Fase 1 y 2: Horizontal tiene prioridad
-    if estado_general["fase"] == 1: # Horizontal verde
-        if elapsed > intervalo_verde:
-            estado_general["H"] = "amarillo"
-            estado_general["V"] = "rojo"
-            estado_general["fase"] = 2
-            last_switch = time_now
-
-    elif estado_general["fase"] == 2:  # Horizontal amarillo
-        if elapsed > intervalo_amarillo:
-            estado_general["H"] = "rojo"
-            estado_general["V"] = "verde"
-            estado_general["fase"] = 3
-            last_switch = time_now
-
-    # Fase 3 y 4: Vertical tiene prioridad
-    elif estado_general["fase"] == 3:  # Vertical verde
-        if elapsed > intervalo_verde:
-            estado_general["H"] = "rojo"
-            estado_general["V"] = "amarillo"
-            estado_general["fase"] = 4
-            last_switch = time_now
-
-    elif estado_general["fase"] == 4:  # Vertical amarillo
-        if elapsed > intervalo_amarillo:
-            estado_general["H"] = "verde"
-            estado_general["V"] = "rojo"
-            estado_general["fase"] = 1
-            last_switch = time_now
-
+    
+    # Aplicar estado actualizado a cada semáforo
+    for s in semaforos:
+        s.estado = estado_general[s.linea]
 
 
 
