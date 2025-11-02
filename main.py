@@ -3,7 +3,6 @@ from vehiculo import Vehiculo
 from semaforo import Semaforo
 from protocolo import ProtocoloVANET
 from interfaz import dibujar_cruce, ANCHO, ALTO
-import random
 
 # Inicializar pygame y la ventana
 pygame.init()
@@ -47,16 +46,18 @@ for i in range(10):  # crea 10 vehículos
 clock = pygame.time.Clock()
 ejecutando = True
 
-# Estado inicial general de los semáforos
+# Estado inicial de los semáforos
 estado_general = {
-    "H": "verde",   # semáforos horizontales inician en verde
-    "V": "rojo",    # semáforos verticales en rojo
-    "fase": 1       # indica en qué etapa del ciclo estamos
+    "H": "verde",   # Horizontales comienzan en verde
+    "V": "rojo",    # Verticales comienzan en rojo
+    "fase": 1       # Fase inicial del ciclo
 }
 
+# Tiempos de cambio (en milisegundos)
+last_switch = 0
+intervalo_verde = 6000
+intervalo_amarillo = 3000
 
-last_switch = 0  # Momento del último cambio
-intervalo = 6000  # Duración de cada ciclo (6 segundos aprox)
 
 
 # ------------------------- BUCLE PRINCIPAL -------------------------
@@ -85,15 +86,15 @@ while ejecutando:
     elapsed = time_now - last_switch
 
     # Fase 1 y 2: Horizontal tiene prioridad
-    if estado_general["fase"] == 1:  # Horizontal verde
-        if elapsed > 6000:
+    if estado_general["fase"] == 1: # Horizontal verde
+        if elapsed > intervalo_verde:
             estado_general["H"] = "amarillo"
             estado_general["V"] = "rojo"
             estado_general["fase"] = 2
             last_switch = time_now
 
     elif estado_general["fase"] == 2:  # Horizontal amarillo
-        if elapsed > 3000:
+        if elapsed > intervalo_amarillo:
             estado_general["H"] = "rojo"
             estado_general["V"] = "verde"
             estado_general["fase"] = 3
@@ -101,26 +102,20 @@ while ejecutando:
 
     # Fase 3 y 4: Vertical tiene prioridad
     elif estado_general["fase"] == 3:  # Vertical verde
-        if elapsed > 6000:
+        if elapsed > intervalo_verde:
             estado_general["H"] = "rojo"
             estado_general["V"] = "amarillo"
             estado_general["fase"] = 4
             last_switch = time_now
 
     elif estado_general["fase"] == 4:  # Vertical amarillo
-        if elapsed > 3000:
+        if elapsed > intervalo_amarillo:
             estado_general["H"] = "verde"
             estado_general["V"] = "rojo"
             estado_general["fase"] = 1
             last_switch = time_now
 
 
-
-
-
-    # Aplicar el nuevo color a todos los semáforos
-    for s in semaforos:
-        s.estado = estado_general[s.linea]
 
 
     # --- Dibujar elementos ---
