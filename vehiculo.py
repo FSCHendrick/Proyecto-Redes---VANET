@@ -2,11 +2,12 @@ import math
 from semaforo import Semaforo
 
 class Vehiculo:
-    def __init__(self, id, tipo, x, y, direccion):
+    def __init__(self, id, tipo, x, y, linea, direccion):
         self.id = id
         self.tipo = tipo  # "normal" o "emergencia"
         self.x = x
         self.y = y
+        self.linea = linea # "H" = Horizontal, "V" = Vertical
         # velocidad_normal es la velocidad de crucero; velocidad_actual es la que usamos para movernos
         self.velocidad_normal = 2 if tipo == "normal" else 4
         self.velocidad = self.velocidad_normal
@@ -18,12 +19,16 @@ class Vehiculo:
             return  # Si está detenido, no se mueve
         if self.direccion == "E":
             self.x += self.velocidad
+            self.linea = "H"
         elif self.direccion == "W":
             self.x -= self.velocidad
+            self.linea = "H"
         elif self.direccion == "N":
             self.y -= self.velocidad
+            self.linea = "V"
         elif self.direccion == "S":
             self.y += self.velocidad
+            self.linea = "V"
 
     def detectar_semaforo(self, semaforos):
     
@@ -81,17 +86,32 @@ class Vehiculo:
                 self.velocidad = self.velocidad_normal  # si ya está cerca, puede pasar
 
         elif closest_s.estado == "rojo":
-            # Solo detener si todavía no llegó al cruce
-            if distancia > DISTANCIA_DETENCION:
-                self.moviendo = False
-                self.velocidad = 0
-        elif distancia <= MARGEN_CRUCE:
-            # Si ya está muy cerca, dejarlo pasar para evitar bloqueo en el cruce
-            self.moviendo = True
-            self.velocidad = self.velocidad_normal
-        else:
-            self.moviendo = False
-            self.velocidad = 0
+            # Determinar si el semáforo afecta al carril del vehículo
+            afecta = (
+                (self.linea == "H" and closest_s.linea == "H") or
+            (self.linea == "V" and closest_s.linea == "V")
+            )
+
+            if afecta:
+                # Evaluar distancia al cruce según dirección
+                if self.direccion in ["E", "W"] and abs(self.x - closest_s.x) < DISTANCIA_DETENCION:
+                    self.moviendo = False
+                    self.velocidad = 0
+                elif self.direccion in ["N", "S"] and abs(self.y - closest_s.y) < DISTANCIA_DETENCION:
+                    self.moviendo = False
+                    self.velocidad = 0
+                elif distancia <= MARGEN_CRUCE:
+                    # Si ya está muy cerca, dejarlo pasar
+                    self.moviendo = True
+                    self.velocidad = self.velocidad_normal
+                else:
+                    self.moviendo = True
+                    self.velocidad = self.velocidad_normal
+            else:
+                # Si el semáforo no corresponde a su carril, sigue normal
+                self.moviendo = True
+                self.velocidad = self.velocidad_normal
+
 
 
     def generar_mensaje(self):

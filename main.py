@@ -12,8 +12,10 @@ pygame.display.set_caption("Simulación VANET - Smart City")
 
 # Crear semáforos (posición aproximada del cruce)
 semaforos = [
-    Semaforo(1, 390, 240),
-    Semaforo(2, 410, 360)
+    Semaforo(1, 390, 240, "verde", "H"),
+    Semaforo(2, 410, 360, "verde", "H"),
+    Semaforo(3, 360, 200, "rojo", "V"),
+    Semaforo(4, 440, 400, "rojo", "V")
 ]
 
 # Crear vehículos (id, tipo, posición x, posición y, dirección)
@@ -24,23 +26,36 @@ tipos = ["normal", "normal", "emergencia"]  # más probabilidad de autos normale
 for i in range(10):  # crea 10 vehículos
     tipo = random.choice(tipos)
     dir = random.choice(direcciones)
+    
     if dir == "E":
         x, y = random.randint(50, 200), 260
+        linea = "H"
     elif dir == "W":
         x, y = random.randint(600, 750), 320
+        linea = "H"
     elif dir == "S":
         x, y = 390, random.randint(50, 200)
+        linea = "V"
     else:  # N
         x, y = 410, random.randint(400, 550)
-    vehiculos.append(Vehiculo(i+1, tipo, x, y, dir))
+        linea = "V"
+
+    vehiculos.append(Vehiculo(i+1, tipo, x, y, linea, dir))
+
 
 
 clock = pygame.time.Clock()
 ejecutando = True
 
-# Estado inicial del semáforo
-traffic_light = "verde"
-last_switch = 0  # último momento en que cambió el color
+# Estado inicial general de los semáforos
+estado_general = {
+    "H": "verde",   # Los semáforos horizontales comienzan en verde
+    "V": "rojo"     # Los verticales comienzan en rojo
+}
+
+last_switch = 0  # Momento del último cambio
+intervalo = 6000  # Duración de cada ciclo (6 segundos aprox)
+
 
 # ------------------------- BUCLE PRINCIPAL -------------------------
 while ejecutando:
@@ -63,27 +78,27 @@ while ejecutando:
         s.limpiar_datos()
 
     # --- Control automático del semáforo ---
-    time_now = pygame.time.get_ticks()  # tiempo actual en milisegundos
+    time_now = pygame.time.get_ticks()
 
-    # Ciclo de semáforo más estable (6s verde, 2s amarillo, 5s rojo)
-    if traffic_light == "verde" and time_now - last_switch > 6000:
-        traffic_light = "amarillo1"
-        last_switch = time_now
-    elif traffic_light == "amarillo1" and time_now - last_switch > 2000:
-        traffic_light = "rojo"
-        last_switch = time_now
-    elif traffic_light == "rojo" and time_now - last_switch > 5000:
-        traffic_light = "amarillo2"
-        last_switch = time_now
-    elif traffic_light == "amarillo2" and time_now - last_switch > 2000:
-        traffic_light = "verde"
+    # Cambiar el estado cada cierto tiempo
+    if time_now - last_switch > intervalo:
+        # Intercambiar los colores
+        if estado_general["H"] == "verde":
+            estado_general["H"] = "rojo"
+            estado_general["V"] = "verde"
+        else:
+            estado_general["H"] = "verde"
+            estado_general["V"] = "rojo"
+
         last_switch = time_now
 
-        # --- print("Cambio semáforo a", traffic_light, "en", time_now)
+
+
 
     # Aplicar el nuevo color a todos los semáforos
     for s in semaforos:
-        s.estado = traffic_light
+        s.estado = estado_general[s.linea]
+
 
     # --- Dibujar elementos ---
     dibujar_cruce(pantalla, vehiculos, semaforos)
