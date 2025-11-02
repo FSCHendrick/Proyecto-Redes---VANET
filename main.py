@@ -74,8 +74,9 @@ while ejecutando:
 
     # --- Actualizar los semáforos ---
     for s in semaforos:
-        s.actualizar_estado()
+        s.actualizar_estado(estado_general)
         s.limpiar_datos()
+
 
     # --- Control automático del semáforo ---
     time_now = pygame.time.get_ticks()
