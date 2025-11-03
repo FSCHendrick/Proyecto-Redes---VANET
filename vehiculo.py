@@ -15,6 +15,7 @@ class Vehiculo:
         self.velocidad_actual = 0  # velocidad real usada (para suavizar)
         self.moviendo = True
         self.activo = True  # inicializar activo
+        self.cruce_realizado = False
 
         # Referencias útiles
         self.semaforo_cercano = None
@@ -23,8 +24,12 @@ class Vehiculo:
     def mover(self, vehiculos):
         velocidad = 2 if self.tipo == "normal" else 3  # autos de emergencia más rápidos
 
-        # Si hay semáforo rojo cercano, el auto se detiene antes de cruzar
-        if self.semaforo_cercano and self.semaforo_cercano.estado in ["rojo", "amarillo1", "amarillo2"]:
+        # Si ya realizó el cruce, ignorar el semáforo
+        if self.cruce_realizado:
+            pass
+
+        # Si hay semáforo rojo cercano, el auto se detiene antes de cruzar (solo si no se realizó el cruce)
+        if not self.cruce_realizado and self.semaforo_cercano and self.semaforo_cercano.estado in ["rojo", "amarillo1", "amarillo2"]:
             if self.linea == "H" and abs(self.x - self.semaforo_cercano.x) < 50:
                 return
             if self.linea == "V" and abs(self.y - self.semaforo_cercano.y) < 50:
@@ -53,10 +58,20 @@ class Vehiculo:
             self.y += velocidad
         elif self.direccion == "N":
             self.y -= velocidad
+        
+        # activar cruce_realizado cuando cruza la coordenada del semáforo más cercano
+        if self.semaforo_cercano and not self.cruce_realizado:
+            s = self.semaforo_cercano
+            if self.linea == "H":
+                if (self.direccion == "E" and self.x >= s.x) or (self.direccion == "W" and self.x <= s.x):
+                    self.cruce_realizado = True
+            else:  # "V"
+                if (self.direccion == "S" and self.y >= s.y) or (self.direccion == "N" and self.y <= s.y):
+                    self.cruce_realizado = True
 
-        # Marcar vehículos que salen completamente del área visible
-        if self.x < -60 or self.x > 860 or self.y < -60 or self.y > 660:
-            self.activo = False
+                # Marcar vehículos que salen completamente del área visible
+                if self.x < -60 or self.x > 860 or self.y < -60 or self.y > 660:
+                    self.activo = False
 
     def detectar_semaforo(self, semaforos):
     # Evalúa si debe detenerse o desacelerar según la distancia al semáforo.
@@ -66,6 +81,13 @@ class Vehiculo:
         FACTOR_AMARILLO = 0.4
 
         if self.tipo == "emergencia":
+            self.moviendo = True
+            self.velocidad = self.velocidad_normal
+            return
+
+        # Si ya cruzó la intersección, no considerar semáforos
+        if self.cruce_realizado:
+            self.semaforo_cercano = None
             self.moviendo = True
             self.velocidad = self.velocidad_normal
             return
