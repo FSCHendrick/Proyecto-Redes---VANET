@@ -1,6 +1,7 @@
 import math
 from semaforo import Semaforo
 
+#comentario
 class Vehiculo:
     def __init__(self, id, tipo, x, y, linea, direccion):
         self.id = id
