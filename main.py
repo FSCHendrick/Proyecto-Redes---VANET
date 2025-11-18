@@ -11,35 +11,34 @@ pygame.display.set_caption("Simulación VANET - Control Dinámico y Emergencias 
 # ------------------ CONFIGURACIÓN INICIAL ------------------
 
 semaforos = [
-    Semaforo(1, 390, 240),  # Norte
-    Semaforo(2, 410, 360),  # Sur
-    Semaforo(3, 300, 290),  # Oeste
-    Semaforo(4, 500, 310)   # Este
+    Semaforo(1, 300, 300, "verde", "H"),
+    Semaforo(2, 500, 300, "verde", "H"),
+    Semaforo(3, 400, 240, "rojo", "V"),
+    Semaforo(4, 400, 360, "rojo", "V")
 ]
 
-vehiculos = [
-    # E → W
-    Vehiculo(1, "normal", 50, 260, "E"),
-    Vehiculo(2, "normal", 100, 270, "E"),
-    Vehiculo(3, "emergencia", 10, 280, "E"),
+# Crear vehículos (id, tipo, posición x, posición y, dirección)
+vehiculos = []
+direcciones = ["E", "W", "N", "S"]
+tipos = ["normal", "normal", "emergencia"]  # más probabilidad de autos normales
 
-    # W → E
-    Vehiculo(4, "normal", 750, 320, "W"),
-    Vehiculo(5, "normal", 700, 310, "W"),
+# --- Configuración para aparición gradual de vehículos ---
+ultimo_spawn = 0          # tiempo del último vehículo creado
+intervalo_spawn = 2000    # cada 2 segundos aparece uno nuevo
+max_vehiculos = 15        # límite total de autos en la simulación
 
-    # N → S
-    Vehiculo(6, "normal", 400, 50, "S"),
-    Vehiculo(7, "emergencia", 420, 30, "S"),
-
-    # S → N
-    Vehiculo(8, "normal", 410, 550, "N"),
-    Vehiculo(9, "normal", 430, 560, "N"),
-]
 
 clock = pygame.time.Clock()
 ejecutando = True
 
-# ------------------ CONTROL DE SEMÁFOROS ------------------
+# Estado inicial de los semáforos
+estado_general = {"H": "verde", "V": "rojo"}
+fase = "H_verde"
+last_switch = 0
+intervalo_verde = 6000
+intervalo_amarillo = 3000
+
+
 
 # Iniciamos con eje N-S verde, E-O rojo
 estado_NS = "verde"
@@ -63,74 +62,93 @@ while ejecutando:
         if event.type == pygame.QUIT:
             ejecutando = False
 
-    tiempo_actual = pygame.time.get_ticks()
-    emergencia_activa = tiempo_actual < emergencia_activa_until
+    # --- Crear vehículos gradualmente en los extremos (flujo continuo) ---
+    time_now = pygame.time.get_ticks()
 
-    # -----------------------
-    # CAMBIO AUTOMÁTICO DE CICLOS (solo si no hay emergencia)
-    # -----------------------
-    if not emergencia_activa and (tiempo_actual - last_switch > tiempo_cambio):
-        if estado_NS == "verde":
-            estado_NS = "amarillo"
-            estado_EO = "rojo"
-            tiempo_cambio = duracion_amarillo
-            print("[DEBUG] Cambio → NS=amarillo, EO=rojo")
-        elif estado_NS == "amarillo":
-            estado_NS = "rojo"
-            estado_EO = "verde"
-            tiempo_cambio = duracion_verde
-            print("[DEBUG] Cambio → NS=rojo, EO=verde")
-        elif estado_EO == "verde":
-            estado_EO = "amarillo"
-            estado_NS = "rojo"
-            tiempo_cambio = duracion_amarillo
-            print("[DEBUG] Cambio → EO=amarillo, NS=rojo")
-        elif estado_EO == "amarillo":
-            estado_EO = "rojo"
-            estado_NS = "verde"
-            tiempo_cambio = duracion_verde
-            print("[DEBUG] Cambio → EO=rojo, NS=verde")
-        last_switch = tiempo_actual
+    # Mantiene un máximo de vehículos activos
+    if len(vehiculos) < max_vehiculos and time_now - ultimo_spawn > intervalo_spawn:
+        tipo = random.choice(tipos)
+        dir = random.choice(direcciones)
 
-    # -----------------------
-    # APLICAR ESTADOS A LOS SEMÁFOROS
-    # -----------------------
-    for s in semaforos:
-        if s.id in [1, 2]:  # Norte y Sur
-            s.estado = estado_NS
-        elif s.id in [3, 4]:  # Oeste y Este
-            s.estado = estado_EO
+        if dir == "E":   # izquierda → derecha
+            x = -20
+            y = 270      # carril horizontal superior
+            linea = "H"
+        elif dir == "W": # derecha → izquierda
+            x = ANCHO + 20
+            y = 330      # carril horizontal inferior
+            linea = "H"
+        elif dir == "S": # arriba → abajo
+            x = 340      # carril vertical izquierdo
+            y = -20
+            linea = "V"
+        else:            # N → abajo → arriba
+            x = 450      # carril vertical derecho
+            y = ALTO + 20
+            linea = "V"
 
-    # -----------------------
-    # ACTUALIZAR VEHÍCULOS Y ENVIAR MENSAJES
-    # -----------------------
+
+        # Evita superposición en el punto de aparición
+        if not any(abs(v.x - x) < 30 and abs(v.y - y) < 30 for v in vehiculos):
+            nuevo = Vehiculo(len(vehiculos) + random.randint(1, 50), tipo, x, y, linea, dir)
+            vehiculos.append(nuevo)
+            ultimo_spawn = time_now
+
+
+
+    # Para cada vehículo: detectar semáforo, mover y enviar mensaje (una sola vez)
     for v in vehiculos:
         v.detectar_semaforo(semaforos)
-        v.mover()
+        v.mover(vehiculos)
         for s in semaforos:
             ProtocoloVANET.enviar(v.generar_mensaje(), s)
 
-    # -----------------------
-    # DETECTAR EMERGENCIAS
-    # -----------------------
+    # Eliminar vehículos inactivos o que salieron de pantalla
+    vehiculos = [v for v in vehiculos if getattr(v, "activo", True)]
+
+
+
+    # --- Control automático del semáforo ---
+    time_now = pygame.time.get_ticks()
+
+    if fase == "H_verde" and time_now - last_switch > intervalo_verde:
+        estado_general["H"] = "amarillo1"
+        estado_general["V"] = "rojo"
+        fase = "H_amarillo"
+        last_switch = time_now
+
+    elif fase == "H_amarillo" and time_now - last_switch > intervalo_amarillo:
+        estado_general["H"] = "rojo"
+        estado_general["V"] = "verde"
+        fase = "V_verde"
+        last_switch = time_now
+
+    elif fase == "V_verde" and time_now - last_switch > intervalo_verde:
+        estado_general["V"] = "amarillo2"
+        estado_general["H"] = "rojo"
+        fase = "V_amarillo"
+        last_switch = time_now
+
+    elif fase == "V_amarillo" and time_now - last_switch > intervalo_amarillo:
+        estado_general["V"] = "rojo"
+        estado_general["H"] = "verde"
+        fase = "H_verde"
+        last_switch = time_now
+
+
+    # --- Actualizar los semáforos ---
     for s in semaforos:
-        if any(msg["tipo"] == "emergencia" for msg in s.vehiculos_detectados):
-            if not emergencia_activa:
-                if s.id in [1, 2]:  # eje N-S
-                    estado_NS = "verde"
-                    estado_EO = "rojo"
-                    print("[PRIORIDAD] Emergencia eje N-S")
-                else:  # eje E-O
-                    estado_EO = "verde"
-                    estado_NS = "rojo"
-                    print("[PRIORIDAD] Emergencia eje E-O")
-                emergencia_activa_until = tiempo_actual + duracion_prioridad
-                last_switch = tiempo_actual
+        s.actualizar_estado(estado_general)
         s.limpiar_datos()
 
-    # -----------------------
-    # DIBUJAR ESCENA
-    # -----------------------
+    
+    # Aplicar estado actualizado a cada semáforo
+    for s in semaforos:
+        s.estado = estado_general[s.linea]
+
+
+
+    # --- Dibujar elementos ---
     dibujar_cruce(pantalla, vehiculos, semaforos)
     pygame.display.flip()
     clock.tick(30)

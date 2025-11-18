@@ -3,8 +3,11 @@ import random
 class ProtocoloVANET:
     @staticmethod
     def enviar(mensaje, semaforo):
-        # Simulación de retardo o pérdida de mensaje
-        if random.random() < 0.05:  # 5% de pérdida
-            return  # mensaje no llega
-        semaforo.recibir_datos(mensaje)
-
+        """
+        Envía un mensaje desde un vehículo hacia un semáforo.
+        """
+        if mensaje and semaforo:
+            # Enviar información del vehículo al semáforo
+            semaforo.recibir_datos(mensaje)
+            # Para depuración, puedes activar esta línea:
+            # print(f"Vehículo {mensaje['id']} envía datos al semáforo {semaforo.id}")
