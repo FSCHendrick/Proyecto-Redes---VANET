@@ -1,15 +1,15 @@
-import pygame
+import pygame, random, time
 from vehiculo import Vehiculo
 from semaforo import Semaforo
 from protocolo import ProtocoloVANET
 from interfaz import dibujar_cruce, ANCHO, ALTO
 
+# Inicializar pygame y la ventana
 pygame.init()
 pantalla = pygame.display.set_mode((ANCHO, ALTO))
-pygame.display.set_caption("Simulación VANET - Control Dinámico y Emergencias (CORREGIDO)")
+pygame.display.set_caption("Simulación VANET - Smart City")
 
-# ------------------ CONFIGURACIÓN INICIAL ------------------
-
+# Crear semáforos (posición aproximada del cruce)
 semaforos = [
     Semaforo(1, 300, 300, "verde", "H"),
     Semaforo(2, 500, 300, "verde", "H"),
@@ -40,24 +40,9 @@ intervalo_amarillo = 3000
 
 
 
-# Iniciamos con eje N-S verde, E-O rojo
-estado_NS = "verde"
-estado_EO = "rojo"
-last_switch = pygame.time.get_ticks()
-
-# Duraciones en milisegundos
-duracion_verde = 5000
-duracion_amarillo = 2000
-tiempo_cambio = duracion_verde
-
-# Estado de emergencia
-emergencia_activa_until = 0
-duracion_prioridad = 5000  # ms (5 segundos de prioridad)
-
-# -----------------------------------------------------------------
-#                     BUCLE PRINCIPAL
-# -----------------------------------------------------------------
+# ------------------------- BUCLE PRINCIPAL -------------------------
 while ejecutando:
+    # --- Captura de eventos (para cerrar la ventana) ---
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             ejecutando = False
@@ -151,6 +136,9 @@ while ejecutando:
     # --- Dibujar elementos ---
     dibujar_cruce(pantalla, vehiculos, semaforos)
     pygame.display.flip()
+
+    # Controlar la velocidad de actualización (FPS)
     clock.tick(30)
 
+# Finalizar pygame
 pygame.quit()

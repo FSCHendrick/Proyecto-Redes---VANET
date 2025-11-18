@@ -1,5 +1,3 @@
-import random
-
 class ProtocoloVANET:
     @staticmethod
     def enviar(mensaje, semaforo):

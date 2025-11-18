@@ -45,5 +45,3 @@ def dibujar_cruce(pantalla, vehiculos, semaforos):
     pantalla.blit(font.render("Verde = Avanza", True, (0, 255, 0)), (10, 135))
     pantalla.blit(font.render("Rojo = Detenerse", True, (255, 0, 0)), (10, 160))
     pantalla.blit(font.render("Amarillo = Precaución", True, (255, 255, 0)), (10, 185))
-
-

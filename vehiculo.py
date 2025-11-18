@@ -129,4 +129,3 @@ class Vehiculo:
             "posicion": (self.x, self.y),
             "direccion": self.direccion  # corregido
         }
-
