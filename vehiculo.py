@@ -16,6 +16,7 @@ class Vehiculo:
         self.moviendo = True
         self.activo = True  # inicializar activo
         self.cruce_realizado = False
+        self.remote = False  # por defecto, vehículos locales
 
         # Referencias útiles
         self.semaforo_cercano = None
