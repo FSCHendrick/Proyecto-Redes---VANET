@@ -126,6 +126,7 @@ class Vehiculo:
         return {
             "id": self.id,
             "tipo": self.tipo,
+            "linea": self.linea,
             "posicion": (self.x, self.y),
             "direccion": self.direccion  # corregido
         }
