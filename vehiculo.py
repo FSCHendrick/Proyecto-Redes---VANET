@@ -58,39 +58,76 @@ class Vehiculo:
             self.activo = False
 
     def detectar_semaforo(self, semaforos):
-    # Evalúa si debe detenerse o desacelerar según la distancia al semáforo.
+        # Configuración
         UMBRAL_DETECCION = 120
         DISTANCIA_DETENCION = 60
-        MARGEN_CRUCE = 25
         FACTOR_AMARILLO = 0.4
+        
+        # Coordenadas aproximadas del centro del cruce
+        CENTRO_X = 400
+        CENTRO_Y = 300
 
         if self.tipo == "emergencia":
             self.moviendo = True
             self.velocidad = self.velocidad_normal
             return
 
-        # Solo semáforos de la misma línea
         semaforos_linea = [s for s in semaforos if s.linea == self.linea]
+        semaforos_relevantes = []
 
-        # Filtrar semáforos que ya quedaron atrás
-        semaforos_delante = []
         for s in semaforos_linea:
+            
+            # --- 1. FILTRO DE ZONA (¡LA SOLUCIÓN A TU PROBLEMA!) ---
+            # Ignoramos los semáforos que están "al otro lado" del cruce.
+            # Solo obedecemos los de entrada.
+            
             if self.linea == "H":
-                if (self.direccion == "E" and s.x > self.x) or (self.direccion == "W" and s.x < self.x):
-                    semaforos_delante.append(s)
-            else:  # "V"
-                if (self.direccion == "S" and s.y > self.y) or (self.direccion == "N" and s.y < self.y):
-                    semaforos_delante.append(s)
+                # Autos hacia el Este (E): Solo obedecen semáforos a la IZQUIERDA del centro
+                if self.direccion == "E" and s.x > CENTRO_X:
+                    continue
+                # Autos hacia el Oeste (W): Solo obedecen semáforos a la DERECHA del centro
+                if self.direccion == "W" and s.x < CENTRO_X:
+                    continue
+                    
+            elif self.linea == "V":
+                # Autos hacia el Sur (S): Solo obedecen semáforos ARRIBA del centro
+                if self.direccion == "S" and s.y > CENTRO_Y:
+                    continue
+                # Autos hacia el Norte (N): Solo obedecen semáforos ABAJO del centro
+                if self.direccion == "N" and s.y < CENTRO_Y:
+                    continue
 
-        if not semaforos_delante:
+            # --- 2. FILTRO DE POSICIÓN (Lo que ya tenías) ---
+            # Si ya pasé el semáforo, lo ignoro.
+            
+            if self.linea == "H":
+                if self.direccion == "E":
+                    if s.x < self.x: continue 
+                    semaforos_relevantes.append(s)
+                elif self.direccion == "W":
+                    if s.x > self.x: continue
+                    semaforos_relevantes.append(s)
+
+            else: # Vertical
+                if self.direccion == "S":
+                    if s.y < self.y: continue
+                    semaforos_relevantes.append(s)
+                elif self.direccion == "N":
+                    if s.y > self.y: continue
+                    semaforos_relevantes.append(s)
+
+        # Si no hay semáforos relevantes (porque ya pasé el de entrada y el de salida lo ignoro),
+        # entonces ACELERO para salir del cruce.
+        if not semaforos_relevantes:
             self.semaforo_cercano = None
             self.moviendo = True
             self.velocidad = self.velocidad_normal
             return
 
-        # Semáforo más cercano por delante
-        closest = min(semaforos_delante, key=lambda s: math.hypot(self.x - s.x, self.y - s.y))
+        # --- 3. CALCULO DE DISTANCIA (Igual que antes) ---
+        closest = min(semaforos_relevantes, key=lambda s: math.hypot(self.x - s.x, self.y - s.y))
         distancia = math.hypot(self.x - closest.x, self.y - closest.y)
+        
         self.semaforo_cercano = closest
         self.distancia_semaforo = distancia
 
@@ -99,7 +136,6 @@ class Vehiculo:
             self.velocidad = self.velocidad_normal
             return
 
-        # Lógica según color del semáforo
         if closest.estado == "verde":
             self.moviendo = True
             self.velocidad = self.velocidad_normal
@@ -108,13 +144,10 @@ class Vehiculo:
                 self.moviendo = True
                 self.velocidad = self.velocidad_normal * FACTOR_AMARILLO
             else:
-                self.moviendo = True
+                self.moviendo = True 
                 self.velocidad = self.velocidad_normal
         elif closest.estado == "rojo":
-            if distancia <= MARGEN_CRUCE:
-                self.moviendo = True
-                self.velocidad = self.velocidad_normal
-            elif distancia <= DISTANCIA_DETENCION:
+            if distancia <= DISTANCIA_DETENCION:
                 self.moviendo = False
                 self.velocidad = 0
             else:

@@ -1,15 +1,16 @@
 import random
-import time  # Usaremos 'time' en lugar de 'pygame.time'
+import time
+import socket
+import json
+import config
 from vehiculo import Vehiculo
-from semaforo import Semaforo  # Aún lo necesitamos para que 'Vehiculo' funcione
+from semaforo import Semaforo
 from protocolo import ProtocoloVANET
 
-# --- Configuración de la Simulación ---
-ANCHO, ALTO = 800, 600  # Aún útil para los límites de "spawn"
+# --- Configuración ---
+config.ANCHO, config.ALTO = 800, 600
 
-# Crear semáforos (TEMPORAL)
-# NOTA: Esto es solo para que v.detectar_semaforo() no falle.
-# En una versión futura, el 'controlador' nos dirá los estados.
+# Crear semáforos locales (Estos se actualizarán con datos de la red)
 semaforos = [
     Semaforo(1, 300, 300, "verde", "H"),
     Semaforo(2, 500, 300, "verde", "H"),
@@ -17,84 +18,86 @@ semaforos = [
     Semaforo(4, 400, 360, "rojo", "V")
 ]
 
-# Lista para guardar nuestros vehículos simulados
 vehiculos = []
 direcciones = ["E", "W", "N", "S"]
-tipos = ["normal", "normal", "normal", "normal", "emergencia"] # 1 de 5 es emergencia
+tipos = ["normal", "normal", "normal", "normal", "normal", "normal", "normal", "normal", "normal", "emergencia"]
 
-# --- Configuración para aparición gradual de vehículos ---
-ultimo_spawn = 0        # tiempo del último vehículo creado (en segundos)
-intervalo_spawn = 2.0   # cada 2 segundos aparece uno nuevo
-max_vehiculos = 15      # límite total de autos en la simulación
+ultimo_spawn = 0
+config.intervalo_spawn = 2.0
+config.max_vehiculos = 15
+
+# Configurar socket para RECIBIR respuesta del controlador
+# (El protocolo.py ya tiene un socket, pero aquí necesitamos recibir explícitamente)
+sock_sim = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+sock_sim.settimeout(0.05) # Timeout muy corto para no bloquear la simulación
 
 print("Iniciando simulador de vehículos...")
 print(f"Enviando datos a {ProtocoloVANET.DESTINO}")
 
-# ------------------------- BUCLE PRINCIPAL (Headless) -------------------------
 try:
     while True:
-        # Usamos time.time() que da los segundos actuales
         time_now = time.time()
 
-        # --- Crear vehículos gradualmente en los extremos (flujo continuo) ---
-        if len(vehiculos) < max_vehiculos and (time_now - ultimo_spawn) > intervalo_spawn:
+        # --- 1. SINCRONIZAR SEMÁFOROS CON EL CONTROLADOR (NUEVO) ---
+        try:
+            # A. Preguntar al controlador: "¿Cómo están las luces?"
+            solicitud = {"tipo_mensaje": "SOLICITUD_LUCES"}
+            sock_sim.sendto(json.dumps(solicitud).encode('utf-8'), ProtocoloVANET.DESTINO)
+            
+            # B. Esperar respuesta
+            datos_bytes, _ = sock_sim.recvfrom(1024)
+            datos_str = datos_bytes.decode('utf-8')
+            respuesta = json.loads(datos_str)
+            
+            estado_luces = respuesta.get("semaforos", {})
+            
+            # C. Actualizar nuestros objetos Semaforo locales
+            # Si el controlador dice H='rojo', ponemos todos los H en rojo.
+            for s in semaforos:
+                if s.linea in estado_luces:
+                    s.estado = estado_luces[s.linea]
+                    
+        except socket.timeout:
+            pass # Si el controlador está ocupado, seguimos con el estado anterior
+        except Exception as e:
+            print(f"Error al sincronizar luces: {e}")
+
+
+        # --- 2. LOGICA DE VEHÍCULOS (Igual que antes) ---
+        if len(vehiculos) < config.max_vehiculos and (time_now - ultimo_spawn) > config.intervalo_spawn:
             tipo = random.choice(tipos)
             dir = random.choice(direcciones)
 
-            if dir == "E":   # izquierda → derecha
-                x, y, linea = -20, 270, "H"
-            elif dir == "W": # derecha → izquierda
-                x, y, linea = ANCHO + 20, 330, "H"
-            elif dir == "S": # arriba → abajo
-                x, y, linea = 340, -20, "V"
-            else:            # N → abajo → arriba
-                x, y, linea = 450, ALTO + 20, "V"
+            if dir == "E":   x, y, linea = -20, 270, "H"
+            elif dir == "W": x, y, linea = config.ANCHO + 20, 330, "H"
+            elif dir == "S": x, y, linea = 340, -20, "V"
+            else:            x, y, linea = 450, config.ALTO + 20, "V"
 
-            # Evita superposición en el punto de aparición
             if not any(abs(v.x - x) < 30 and abs(v.y - y) < 30 for v in vehiculos):
-                nuevo_id = int(time_now * 100) + random.randint(1, 100) # ID único
+                nuevo_id = int(time_now * 1000) + random.randint(1, 1000)
                 nuevo = Vehiculo(nuevo_id, tipo, x, y, linea, dir)
                 vehiculos.append(nuevo)
                 ultimo_spawn = time_now
-                print(f"[SPAWN] Creado vehículo {nuevo.id} (Tipo: {tipo})")
+                print(f"[SPAWN] {nuevo.id} ({tipo}) en {linea}")
 
-        # --- Mover y Enviar Datos de cada vehículo ---
+        # Mover y Enviar
         for v in vehiculos:
-            # NOTA: 'detectar_semaforo' usa la lista 'semaforos' local y fija.
-            # Los autos se detendrán en los semáforos 'rojo' iniciales.
-            # ¡Esto está bien para nuestra prueba!
+            # ¡AHORA SÍ! 'semaforos' tiene el estado real del controlador
             v.detectar_semaforo(semaforos) 
-            
             v.mover(vehiculos)
             
-            # Generar el mensaje del protocolo
             mensaje = v.generar_mensaje()
-            
-            # Enviar el mensaje por la red
             if mensaje:
                 ProtocoloVANET.enviar(mensaje)
 
-        # Eliminar vehículos inactivos o que salieron de pantalla
-        vehiculos_activos = []
-        for v in vehiculos:
-            if getattr(v, "activo", True):
-                vehiculos_activos.append(v)
-        
-        if len(vehiculos) != len(vehiculos_activos):
-             print(f"[CLEANUP] Vehículos activos: {len(vehiculos_activos)} / {len(vehiculos)}")
-        
+        # Cleanup
+        vehiculos_activos = [v for v in vehiculos if getattr(v, "activo", True)]
         vehiculos = vehiculos_activos
 
-        # --- Controlar la velocidad de actualización ---
-        # Dormimos por un corto tiempo para simular los "frames" (ej. 30 FPS)
-        # Esto evita que el bucle corra al 100% de CPU y sature la red.
-        time.sleep(1 / 30) # 30 "ticks" por segundo
+        time.sleep(1 / 30)
 
 except KeyboardInterrupt:
-    # Captura si presionas Ctrl+C en la terminal
-    print("\nSimulación detenida por el usuario.")
-
+    print("\nSimulación detenida.")
 finally:
-    # Esto es importante para cerrar el socket de forma limpia
     ProtocoloVANET.cerrar_socket()
-    print("Simulador finalizado.")
+    sock_sim.close()
