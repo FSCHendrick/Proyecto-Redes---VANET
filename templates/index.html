@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Visualizador VANET (Web)</title>
+  <style>
+    body {
+      background-color: #111;
+      color: #eee;
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #info {
+      margin: 10px;
+    }
+    canvas {
+      border: 1px solid #555;
+      background-color: #222;
+    }
+  </style>
+</head>
+<body>
+  <h1>Visualizador VANET (Web)</h1>
+  <div id="info">Cargando...</div>
+
+  <canvas id="canvas" width="{{ ancho }}" height="{{ alto }}"></canvas>
+
+  
+  <script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const info = document.getElementById("info");
+
+    // --- CARGA DE IMÁGENES (como en Pygame) ---
+    const imgAuto = new Image();    // auto normal
+    const imgAmbu = new Image();    // ambulancia
+
+    imgAuto.src = "/assets/auto.png";
+    imgAmbu.src = "/assets/ambula.png";
+
+    let assetsCargados = 0;
+    function onAssetLoaded() {
+      assetsCargados++;
+      if (assetsCargados === 2) {
+        // Cuando las 2 imágenes estén listas, empezamos el loop
+        actualizar();
+      }
+    }
+    imgAuto.onload = onAssetLoaded;
+    imgAmbu.onload = onAssetLoaded;
+
+    function dibujarCruceBase() {
+        // Fondo
+        ctx.fillStyle = "#222";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Calles (MISMAS COORDENADAS QUE PYGAME)
+        ctx.fillStyle = "#333";
+        // Vertical: x = 300, ancho = 200
+        ctx.fillRect(300, 0, 200, canvas.height);
+        // Horizontal: y = 250, alto = 100
+        ctx.fillRect(0, 250, canvas.width, 100);
+
+        // Líneas amarillas
+        ctx.strokeStyle = "rgb(200,200,0)";
+        ctx.lineWidth = 2;
+
+        // V-Arriba
+        ctx.beginPath();
+        ctx.moveTo(400, 0);
+        ctx.lineTo(400, 250);
+        ctx.stroke();
+
+        // V-Abajo
+        ctx.beginPath();
+        ctx.moveTo(400, 350);
+        ctx.lineTo(400, canvas.height);
+        ctx.stroke();
+
+        // H-Izq
+        ctx.beginPath();
+        ctx.moveTo(0, 300);
+        ctx.lineTo(300, 300);
+        ctx.stroke();
+
+        // H-Der
+        ctx.beginPath();
+        ctx.moveTo(500, 300);
+        ctx.lineTo(canvas.width, 300);
+        ctx.stroke();
+    }
+
+
+    function dibujarSemaforo(x, y, estado) {
+      ctx.beginPath();
+      ctx.arc(x, y, 16, 0, Math.PI * 2);
+      ctx.fillStyle = "#000";
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(x, y, 14, 0, Math.PI * 2);
+      if (estado === "verde") {
+        ctx.fillStyle = "lime";
+      } else if (estado === "amarillo1" || estado === "amarillo2") {
+        ctx.fillStyle = "yellow";
+      } else {
+        ctx.fillStyle = "red";
+      }
+      ctx.fill();
+    }
+
+    // Rotaciones para las imágenes, imitando tu cargar_assets()
+    // AUTO: imagen base mirando hacia ABAJO (Sur)
+    function anguloAuto(dir) {
+      switch (dir) {
+        case "S": return 0;
+        case "E": return -Math.PI / 2;      // -90°
+        case "N": return Math.PI;           // 180°
+        case "W": return Math.PI / 2;       // +90°
+        default:  return 0;
+      }
+    }
+
+    // AMBULANCIA: imagen base mirando hacia IZQUIERDA (Oeste)
+    function anguloAmbu(dir) {
+      switch (dir) {
+        case "W": return 0;
+        case "S": return -Math.PI / 2;
+        case "E": return Math.PI;
+        case "N": return Math.PI / 2;
+        default:  return 0;
+      }
+    }
+
+    // Tamaños aproximados (puedes ajustarlos para que se vean igual que en Pygame)
+    const TAMANO_AUTO = { w: 50, h: 40 };
+    const TAMANO_AMBULA = { w: 40, h: 60 };
+
+    function dibujarVehiculo(v) {
+      const pos = v.posicion || [0, 0];
+      const x = pos[0];
+      const y = pos[1];
+      const tipo = v.tipo || "normal";
+      const dir = v.direccion || "S";
+
+      ctx.save();
+      ctx.translate(x, y);
+
+      let img, w, h, ang;
+
+      if (tipo === "emergencia") {
+        img = imgAmbu;
+        w = TAMANO_AMBULA.w;
+        h = TAMANO_AMBULA.h;
+        ang = anguloAmbu(dir);
+      } else {
+        img = imgAuto;
+        w = TAMANO_AUTO.w;
+        h = TAMANO_AUTO.h;
+        ang = anguloAuto(dir);
+      }
+
+      ctx.rotate(ang);
+      ctx.drawImage(img, -w / 2, -h / 2, w, h);
+      ctx.restore();
+
+      // ID encima (como en Pygame)
+      ctx.font = "10px Arial";
+      // Sombra
+      ctx.fillStyle = "black";
+      ctx.fillText(String(v.id), x + 1, y - 24);
+      // Texto blanco
+      ctx.fillStyle = "white";
+      ctx.fillText(String(v.id), x, y - 25);
+    }
+
+    function dibujarEstado(data) {
+      dibujarCruceBase();
+
+      const semaforos = data.semaforos || {};
+      const vehiculos = data.vehiculos || [];
+
+      const estadoH = semaforos.H || "rojo";
+      const estadoV = semaforos.V || "rojo";
+
+      // Semáforos (mismas posiciones que visualizador.py)
+      dibujarSemaforo(300, 300, estadoH);
+      dibujarSemaforo(500, 300, estadoH);
+      dibujarSemaforo(400, 240, estadoV);
+      dibujarSemaforo(400, 360, estadoV);
+
+      // Vehículos
+      vehiculos.forEach(dibujarVehiculo);
+
+      info.textContent =
+        `Semáforos ⇒ H: ${estadoH}, V: ${estadoV} | Vehículos activos: ${vehiculos.length}`;
+    }
+
+    async function actualizar() {
+      try {
+        const res = await fetch("/estado");
+        const data = await res.json();
+        dibujarEstado(data);
+      } catch (e) {
+        console.error(e);
+        info.textContent = "Error al obtener estado del controlador";
+      } finally {
+        requestAnimationFrame(actualizar);
+      }
+    }
+
+    // Si las imágenes ya están en caché, puede que onload no se dispare.
+    // Por si acaso, si pasan 500 ms y no se disparó nada, arrancamos igual.
+    setTimeout(() => {
+      if (assetsCargados < 2) {
+        console.warn("Assets podrían no estar completamente cargados, iniciando igual.");
+        actualizar();
+      }
+    }, 500);
+  </script>
+</body>
+</html>

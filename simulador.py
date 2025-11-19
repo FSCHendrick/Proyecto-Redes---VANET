@@ -74,7 +74,8 @@ try:
             else:            x, y, linea = 450, config.ALTO + 20, "V"
 
             if not any(abs(v.x - x) < 30 and abs(v.y - y) < 30 for v in vehiculos):
-                nuevo_id = int(time_now * 1000) + random.randint(1, 1000)
+                config.last_vehicle_id += 1
+                nuevo_id = config.last_vehicle_id
                 nuevo = Vehiculo(nuevo_id, tipo, x, y, linea, dir)
                 vehiculos.append(nuevo)
                 ultimo_spawn = time_now
