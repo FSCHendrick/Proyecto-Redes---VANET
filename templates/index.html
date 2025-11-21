@@ -28,222 +28,234 @@
   <canvas id="canvas" width="{{ ancho }}" height="{{ alto }}"></canvas>
 
   <script>
-    const canvas = document.getElementById("canvas");
-    const ctx = canvas.getContext("2d");
-    const info = document.getElementById("info");
+  const canvas = document.getElementById("canvas");
+  const ctx = canvas.getContext("2d");
+  const info = document.getElementById("info");
 
-    // --- CARGA DE IMÁGENES ---
-    const imgAuto = new Image();
-    const imgAmbu = new Image();
+  // --- CARGA DE IMÁGENES ---
+  const imgAuto = new Image();
+  const imgAmbu = new Image();
 
-    imgAuto.src = "/assets/auto.png";
-    imgAmbu.src = "/assets/ambula.png";
+  imgAuto.src = "/assets/auto.png";
+  imgAmbu.src = "/assets/ambula.png";
 
-    let assetsCargados = 0;
-    function onAssetLoaded() {
-      assetsCargados++;
-      if (assetsCargados === 2) {
-        actualizar();
-      }
+  let assetsCargados = 0;
+  function onAssetLoaded() {
+    assetsCargados++;
+    if (assetsCargados === 2) {
+      // Cuando las 2 imágenes estén listas, arrancamos los dos loops
+      loopDibujo();
+      loopFetch();
     }
-    imgAuto.onload = onAssetLoaded;
-    imgAmbu.onload = onAssetLoaded;
+  }
+  imgAuto.onload = onAssetLoaded;
+  imgAmbu.onload = onAssetLoaded;
 
-    function dibujarCruceBase() {
-      // Césped
-      ctx.fillStyle = "rgb(34,139,34)";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+  function dibujarCruceBase() {
+    // Césped
+    ctx.fillStyle = "rgb(34,139,34)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Asfalto
-      ctx.fillStyle = "#323232";
-      // Vertical
-      ctx.fillRect(300, 0, 200, canvas.height);
-      // Horizontal
-      ctx.fillRect(0, 250, canvas.width, 100);
+    // Asfalto
+    ctx.fillStyle = "#323232";
+    // Vertical
+    ctx.fillRect(300, 0, 200, canvas.height);
+    // Horizontal
+    ctx.fillRect(0, 250, canvas.width, 100);
 
-      // Aceras
-      ctx.fillStyle = "rgb(169,169,169)";
-      ctx.fillRect(290, 0, 10, canvas.height);
-      ctx.fillRect(500, 0, 10, canvas.height);
-      ctx.fillRect(0, 240, canvas.width, 10);
-      ctx.fillRect(0, 350, canvas.width, 10);
+    // Aceras
+    ctx.fillStyle = "rgb(169,169,169)";
+    ctx.fillRect(290, 0, 10, canvas.height);
+    ctx.fillRect(500, 0, 10, canvas.height);
+    ctx.fillRect(0, 240, canvas.width, 10);
+    ctx.fillRect(0, 350, canvas.width, 10);
 
-      // Líneas centrales amarillas
-      ctx.strokeStyle = "rgb(255,215,0)";
-      ctx.lineWidth = 3;
+    // Líneas centrales amarillas
+    ctx.strokeStyle = "rgb(255,215,0)";
+    ctx.lineWidth = 3;
 
-      // Vertical arriba
-      ctx.beginPath();
-      ctx.moveTo(400, 0);
-      ctx.lineTo(400, 240);
-      ctx.stroke();
-      // Vertical abajo
-      ctx.beginPath();
-      ctx.moveTo(400, 360);
-      ctx.lineTo(400, canvas.height);
-      ctx.stroke();
-      // Horizontal izquierda
-      ctx.beginPath();
-      ctx.moveTo(0, 300);
-      ctx.lineTo(290, 300);
-      ctx.stroke();
-      // Horizontal derecha
-      ctx.beginPath();
-      ctx.moveTo(510, 300);
-      ctx.lineTo(canvas.width, 300);
-      ctx.stroke();
+    // Vertical arriba
+    ctx.beginPath();
+    ctx.moveTo(400, 0);
+    ctx.lineTo(400, 240);
+    ctx.stroke();
+    // Vertical abajo
+    ctx.beginPath();
+    ctx.moveTo(400, 360);
+    ctx.lineTo(400, canvas.height);
+    ctx.stroke();
+    // Horizontal izquierda
+    ctx.beginPath();
+    ctx.moveTo(0, 300);
+    ctx.lineTo(290, 300);
+    ctx.stroke();
+    // Horizontal derecha
+    ctx.beginPath();
+    ctx.moveTo(510, 300);
+    ctx.lineTo(canvas.width, 300);
+    ctx.stroke();
 
-      // Pasos de cebra
-      const colorCebra = "rgb(230,230,230)";
-      // Verticales
-      for (let x = 300; x < 500; x += 20) {
-        ctx.fillStyle = colorCebra;
-        ctx.fillRect(x + 5, 240, 10, 10); // arriba
-        ctx.fillRect(x + 5, 350, 10, 10); // abajo
-      }
-      // Horizontales
-      for (let y = 250; y < 350; y += 15) {
-        ctx.fillStyle = colorCebra;
-        ctx.fillRect(290, y + 3, 10, 8); // izquierda
-        ctx.fillRect(500, y + 3, 10, 8); // derecha
-      }
+    // Pasos de cebra
+    const colorCebra = "rgb(230,230,230)";
+    // Verticales
+    for (let x = 300; x < 500; x += 20) {
+      ctx.fillStyle = colorCebra;
+      ctx.fillRect(x + 5, 240, 10, 10); // arriba
+      ctx.fillRect(x + 5, 350, 10, 10); // abajo
     }
+    // Horizontales
+    for (let y = 250; y < 350; y += 15) {
+      ctx.fillStyle = colorCebra;
+      ctx.fillRect(290, y + 3, 10, 8); // izquierda
+      ctx.fillRect(500, y + 3, 10, 8); // derecha
+    }
+  }
 
-    function dibujarSemaforo(x, y, estado) {
-      // caja
-      ctx.fillStyle = "rgb(20,20,20)";
-      ctx.beginPath();
-      ctx.roundRect(x - 10, y - 10, 20, 20, 5);
-      ctx.fill();
-      ctx.strokeStyle = "rgb(100,100,100)";
-      ctx.stroke();
+  function dibujarSemaforo(x, y, estado) {
+    // caja
+    ctx.fillStyle = "rgb(20,20,20)";
+    ctx.beginPath();
+    ctx.roundRect(x - 10, y - 10, 20, 20, 5);
+    ctx.fill();
+    ctx.strokeStyle = "rgb(100,100,100)";
+    ctx.stroke();
 
-      let color;
-      if (estado === "verde") {
-        color = "rgb(0,255,0)";
-      } else if (estado === "amarillo1" || estado === "amarillo2") {
-        color = "rgb(255,255,0)";
-      } else {
-        color = "rgb(255,0,0)";
-      }
-
-      // luz
-      ctx.fillStyle = color;
-      ctx.beginPath();
-      ctx.arc(x, y, 7, 0, Math.PI * 2);
-      ctx.fill();
-
-      // halo
-      const grad = ctx.createRadialGradient(x, y, 0, x, y, 15);
-      grad.addColorStop(0, color.replace("rgb", "rgba").replace(")", ",0.4)"));
-      grad.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = grad;
-      ctx.beginPath();
-      ctx.arc(x, y, 15, 0, Math.PI * 2);
-      ctx.fill();
+    let color;
+    if (estado === "verde") {
+      color = "rgb(0,255,0)";
+    } else if (estado === "amarillo1" || estado === "amarillo2") {
+      color = "rgb(255,255,0)";
+    } else {
+      color = "rgb(255,0,0)";
     }
 
-    // Rotaciones
-    function anguloAuto(dir) {
-      switch (dir) {
-        case "S": return 0;
-        case "E": return -Math.PI / 2;
-        case "N": return Math.PI;
-        case "W": return Math.PI / 2;
-        default:  return 0;
-      }
+    // luz
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(x, y, 7, 0, Math.PI * 2);
+    ctx.fill();
+
+    // halo
+    const grad = ctx.createRadialGradient(x, y, 0, x, y, 15);
+    grad.addColorStop(0, color.replace("rgb", "rgba").replace(")", ",0.4)"));
+    grad.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(x, y, 15, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Rotaciones
+  function anguloAuto(dir) {
+    switch (dir) {
+      case "S": return 0;
+      case "E": return -Math.PI / 2;
+      case "N": return Math.PI;
+      case "W": return Math.PI / 2;
+      default:  return 0;
+    }
+  }
+
+  function anguloAmbu(dir) {
+    switch (dir) {
+      case "W": return 0;
+      case "S": return -Math.PI / 2;
+      case "E": return Math.PI;
+      case "N": return Math.PI / 2;
+      default:  return 0;
+    }
+  }
+
+  const TAMANO_AUTO   = { w: 50, h: 40 };
+  const TAMANO_AMBULA = { w: 40, h: 60 };
+
+  function dibujarVehiculo(v) {
+    const pos = v.posicion || [0, 0];
+    const x = pos[0];
+    const y = pos[1];
+    const tipo = v.tipo || "normal";
+    const dir  = v.direccion || "S";
+
+    ctx.save();
+    ctx.translate(x, y);
+
+    let img, w, h, ang;
+
+    if (tipo === "emergencia") {
+      img = imgAmbu;
+      w = TAMANO_AMBULA.w;
+      h = TAMANO_AMBULA.h;
+      ang = anguloAmbu(dir);
+    } else {
+      img = imgAuto;
+      w = TAMANO_AUTO.w;
+      h = TAMANO_AUTO.h;
+      ang = anguloAuto(dir);
     }
 
-    function anguloAmbu(dir) {
-      switch (dir) {
-        case "W": return 0;
-        case "S": return -Math.PI / 2;
-        case "E": return Math.PI;
-        case "N": return Math.PI / 2;
-        default:  return 0;
-      }
+    ctx.rotate(ang);
+    ctx.drawImage(img, -w / 2, -h / 2, w, h);
+    ctx.restore();
+
+    // ID encima
+    ctx.font = "10px Arial";
+    ctx.fillStyle = "black";
+    ctx.fillText(String(v.id), x + 1, y - 24);
+    ctx.fillStyle = "white";
+    ctx.fillText(String(v.id), x, y - 25);
+  }
+
+  function dibujarEstado(data) {
+    dibujarCruceBase();
+
+    const semaforos = data.semaforos || {};
+    const vehiculos = data.vehiculos || [];
+
+    const estadoH = semaforos.H || "rojo";
+    const estadoV = semaforos.V || "rojo";
+
+    // Semáforos
+    dibujarSemaforo(300, 300, estadoH);
+    dibujarSemaforo(500, 300, estadoH);
+    dibujarSemaforo(400, 240, estadoV);
+    dibujarSemaforo(400, 360, estadoV);
+
+    vehiculos.forEach(dibujarVehiculo);
+
+    info.textContent =
+      `Semáforos ⇒ H: ${estadoH}, V: ${estadoV} | Vehículos activos: ${vehiculos.length}`;
+  }
+
+  // --------- NUEVO: separar dibujo y red ---------
+  let ultimoEstado = null;
+
+  // Loop de dibujo: corre a ~60 FPS, usa el último estado disponible
+  function loopDibujo() {
+    if (ultimoEstado) {
+      dibujarEstado(ultimoEstado);
     }
+    requestAnimationFrame(loopDibujo);
+  }
 
-    const TAMANO_AUTO = { w: 50, h: 40 };
-    const TAMANO_AMBULA = { w: 40, h: 60 };
+  // Loop de red: pide /estado cada 100 ms
+  async function loopFetch() {
+  try {
+    const res = await fetch("/estado");
+    ultimoEstado = await res.json();
+  } catch(e) {
+    console.error("Error en fetch:", e);
+  }
+  setTimeout(loopFetch, 200); // <--- poll cada 200 ms
+  }
 
-    function dibujarVehiculo(v) {
-      const pos = v.posicion || [0, 0];
-      const x = pos[0];
-      const y = pos[1];
-      const tipo = v.tipo || "normal";
-      const dir = v.direccion || "S";
-
-      ctx.save();
-      ctx.translate(x, y);
-
-      let img, w, h, ang;
-
-      if (tipo === "emergencia") {
-        img = imgAmbu;
-        w = TAMANO_AMBULA.w;
-        h = TAMANO_AMBULA.h;
-        ang = anguloAmbu(dir);
-      } else {
-        img = imgAuto;
-        w = TAMANO_AUTO.w;
-        h = TAMANO_AUTO.h;
-        ang = anguloAuto(dir);
-      }
-
-      ctx.rotate(ang);
-      ctx.drawImage(img, -w / 2, -h / 2, w, h);
-      ctx.restore();
-
-      // ID encima
-      ctx.font = "10px Arial";
-      ctx.fillStyle = "black";
-      ctx.fillText(String(v.id), x + 1, y - 24);
-      ctx.fillStyle = "white";
-      ctx.fillText(String(v.id), x, y - 25);
+  // Fallback por si onload no se dispara (caché, etc.)
+  setTimeout(() => {
+    if (assetsCargados < 2) {
+      console.warn("Assets podrían no estar completamente cargados, iniciando igual.");
+      loopDibujo();
+      loopFetch();
     }
-
-    function dibujarEstado(data) {
-      dibujarCruceBase();
-
-      const semaforos = data.semaforos || {};
-      const vehiculos = data.vehiculos || [];
-
-      const estadoH = semaforos.H || "rojo";
-      const estadoV = semaforos.V || "rojo";
-
-      // Semáforos – mismas posiciones que Pygame
-      dibujarSemaforo(300, 300, estadoH);
-      dibujarSemaforo(500, 300, estadoH);
-      dibujarSemaforo(400, 240, estadoV);
-      dibujarSemaforo(400, 360, estadoV);
-
-      vehiculos.forEach(dibujarVehiculo);
-
-      info.textContent =
-        `Semáforos ⇒ H: ${estadoH}, V: ${estadoV} | Vehículos activos: ${vehiculos.length}`;
-    }
-
-    async function actualizar() {
-      try {
-        const res = await fetch("/estado");
-        const data = await res.json();
-        dibujarEstado(data);
-      } catch (e) {
-        console.error(e);
-        info.textContent = "Error al obtener estado del controlador";
-      } finally {
-        requestAnimationFrame(actualizar);
-      }
-    }
-
-    // Fallback por si onload no se dispara (caché, etc.)
-    setTimeout(() => {
-      if (assetsCargados < 2) {
-        console.warn("Assets podrían no estar completamente cargados, iniciando igual.");
-        actualizar();
-      }
-    }, 500);
-  </script>
+  }, 500);
+</script>
 </body>
 </html>
