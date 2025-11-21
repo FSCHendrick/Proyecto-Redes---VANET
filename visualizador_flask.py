@@ -46,8 +46,15 @@ def pedir_estado_controlador():
     sock.settimeout(0.2)
     try:
         sock.sendto(json.dumps(solicitud).encode("utf-8"), DESTINO)
-        datos_bytes, _ = sock.recvfrom(40960)
-        estado = json.loads(datos_bytes.decode("utf-8"))
+        datos_bytes, _ = sock.recvfrom(262144)  # 256 KB para muchos vehículos
+        estado_raw = json.loads(datos_bytes.decode("utf-8"))
+
+        # Normalizar para que siempre existan estos campos
+        estado = {
+            "vehiculos": estado_raw.get("vehiculos", []),
+            "semaforos": estado_raw.get("semaforos", {})
+        }
+
     except Exception as e:
         print(f"[ERROR VIZ UDP] {e}")
         estado = {"vehiculos": [], "semaforos": {}}
@@ -61,7 +68,8 @@ def loop_polling(intervalo=0.1):
     while True:
         nuevo_estado = pedir_estado_controlador()
         with lock_estado:
-            estado_compartido = nuevo_estado
+            estado_compartido["vehiculos"] = nuevo_estado.get("vehiculos", [])
+            estado_compartido["semaforos"] = nuevo_estado.get("semaforos", {})
         time.sleep(intervalo)
 
 @app.route("/")

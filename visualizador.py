@@ -25,6 +25,13 @@ class VehiculoDummy:
         self.velocidad = 0
         self.velocidad_normal = 0
 
+class SemaforoDummy:
+    """Objeto simple para representar un semáforo en pantalla."""
+    def __init__(self, x, y, estado):
+        self.x = x
+        self.y = y
+        self.estado = estado
+
 # --- CARGA DE IMÁGENES ---
 IMAGENES_VEHICULOS = {}
 
@@ -32,14 +39,10 @@ def cargar_assets():
     """Carga las imágenes de la carpeta assets y genera las rotaciones específicas."""
     try:
         # 1. Cargar imágenes base
-        # IMPORTANTE: 
-        # - auto.png debe mirar hacia ABAJO (Sur)
-        # - ambula.png debe mirar hacia IZQUIERDA (Oeste)
         img_auto = pygame.image.load("assets/auto.png")      
         img_ambula = pygame.image.load("assets/ambula.png")  
 
         # 2. Escalar
-        # Ajustamos dimensiones. El auto es vertical (24x48), la ambula es horizontal (52x28)
         TAMANO_AUTO = (50, 40)  
         TAMANO_AMBULA_BASE = (40, 60) 
 
@@ -47,22 +50,18 @@ def cargar_assets():
         img_ambula = pygame.transform.scale(img_ambula, TAMANO_AMBULA_BASE)
 
         # 3. Generar rotaciones
-        # Pygame rota en sentido ANTI-HORARIO (contrario al reloj).
-        
-        # --- AUTO (Base: Mira al SUR/Abajo) ---
         IMAGENES_VEHICULOS["normal"] = {
-            "S": img_auto,                                  # 0º (Base)
-            "E": pygame.transform.rotate(img_auto, 90),     # Abajo -> Derecha (+90º)
-            "N": pygame.transform.rotate(img_auto, 180),    # Abajo -> Arriba
-            "W": pygame.transform.rotate(img_auto, 270)     # Abajo -> Izquierda
+            "S": img_auto,
+            "E": pygame.transform.rotate(img_auto, 90),
+            "N": pygame.transform.rotate(img_auto, 180),
+            "W": pygame.transform.rotate(img_auto, 270)
         }
         
-        # --- AMBULANCIA (Base: Mira al OESTE/Izquierda) ---
         IMAGENES_VEHICULOS["emergencia"] = {
-            "W": img_ambula,                                # 0º (Base)
-            "S": pygame.transform.rotate(img_ambula, 90),   # Izquierda -> Abajo (+90º)
-            "E": pygame.transform.rotate(img_ambula, 180),  # Izquierda -> Derecha
-            "N": pygame.transform.rotate(img_ambula, 270)   # Izquierda -> Arriba
+            "W": img_ambula,
+            "S": pygame.transform.rotate(img_ambula, 90),
+            "E": pygame.transform.rotate(img_ambula, 180),
+            "N": pygame.transform.rotate(img_ambula, 270)
         }
         
         print("✅ Imágenes cargadas y rotadas correctamente.")
@@ -101,13 +100,15 @@ def main():
             lista_vehiculos_raw = estado_recibido.get("vehiculos", [])
             dict_semaforos = estado_recibido.get("semaforos", {})
             
+            # Construcción de vehículos (multi vehículo listo)
             vehiculos_objs = [VehiculoDummy(v) for v in lista_vehiculos_raw]
             
+            # Construcción correcta de semáforos
             semaforos_objs = [
-                type('obj', (object,), {"x": 300, "y": 300, "estado": dict_semaforos.get("H", "rojo")}),
-                type('obj', (object,), {"x": 500, "y": 300, "estado": dict_semaforos.get("H", "rojo")}),
-                type('obj', (object,), {"x": 400, "y": 240, "estado": dict_semaforos.get("V", "rojo")}),
-                type('obj', (object,), {"x": 400, "y": 360, "estado": dict_semaforos.get("V", "rojo")})
+                SemaforoDummy(300, 300, dict_semaforos.get("H", "rojo")),
+                SemaforoDummy(500, 300, dict_semaforos.get("H", "rojo")),
+                SemaforoDummy(400, 240, dict_semaforos.get("V", "rojo")),
+                SemaforoDummy(400, 360, dict_semaforos.get("V", "rojo"))
             ]
 
         except Exception:
@@ -115,7 +116,12 @@ def main():
 
         # --- DIBUJAR ---
         try:
-            dibujar_cruce(pantalla, vehiculos_objs, semaforos_objs, IMAGENES_VEHICULOS if usar_imagenes else None)
+            dibujar_cruce(
+                pantalla,
+                vehiculos_objs,
+                semaforos_objs,
+                IMAGENES_VEHICULOS if usar_imagenes else None
+            )
         except Exception as e:
             print(f"Error dibujo: {e}")
         
