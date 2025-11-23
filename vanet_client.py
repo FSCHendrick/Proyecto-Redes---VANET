@@ -18,7 +18,6 @@ TIPO = "normal"        # "normal" o "emergencia"
 LINEA = "V"            # "H" o "V"
 DIRECCION = "S"        # Para H: "E", "W". Para V: "N", "S"
 
-# Dimensiones de la simulación (como en config.py)
 ANCHO = 800
 ALTO = 600
 
