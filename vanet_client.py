@@ -1,24 +1,18 @@
-# vanet_client.py
 import socket
 import json
 import time
 
-# ==========================
 # CONFIGURACIÓN DEL SERVIDOR
-# ==========================
 SERVER_IP = "44.214.110.153"   # IP pública de tu EC2
 SERVER_PORT = 9999             # Mismo puerto que usa controlador.py
 DESTINO = (SERVER_IP, SERVER_PORT)
 
-# ==========================
 # CONFIG DEL "VEHÍCULO"
-# ==========================
-VEHICLE_ID = "gurt"     # ID único para este vehículo
-TIPO = "normal"        # "normal" o "emergencia"
-LINEA = "V"            # "H" o "V"
-DIRECCION = "S"        # Para H: "E", "W". Para V: "N", "S"
+VEHICLE_ID = "gurt"
+TIPO = "normal"   
+LINEA = "V"    
+DIRECCION = "S" 
 
-# Dimensiones de la simulación (como en config.py)
 ANCHO = 800
 ALTO = 600
 

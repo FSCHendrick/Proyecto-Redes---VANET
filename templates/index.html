@@ -226,7 +226,7 @@
       `Semáforos ⇒ H: ${estadoH}, V: ${estadoV} | Vehículos activos: ${vehiculos.length}`;
   }
 
-  // --------- NUEVO: separar dibujo y red ---------
+  // --------- separar dibujo y red ---------
   let ultimoEstado = null;
 
   // Loop de dibujo: corre a ~60 FPS, usa el último estado disponible
@@ -247,7 +247,7 @@
       console.error("Error en fetch:", e);
       info.textContent = "Error al obtener estado del controlador";
     } finally {
-      setTimeout(loopFetch, 100);  // <-- aquí el cambio
+      setTimeout(loopFetch, 100);
     }
   }
 

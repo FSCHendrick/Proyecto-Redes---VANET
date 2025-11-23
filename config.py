@@ -1,6 +1,5 @@
 # --- CONFIGURACIÓN DE RED ---
-# "127.0.0.1" es para pruebas en tu PC. 
-# Cuando usemos Docker, cambiaremos esto.
+# "127.0.0.1" para pruebas en PC. 
 HOST = "127.0.0.1" 
 PORT = 9999
 

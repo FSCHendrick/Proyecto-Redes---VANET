@@ -8,10 +8,10 @@ class Vehiculo:
         self.x = x
         self.y = y
         self.linea = linea
-        self.direccion = direccion   # corregido
+        self.direccion = direccion
         self.velocidad_normal = 2 if tipo == "normal" else 4
         self.velocidad = self.velocidad_normal
-        self.velocidad_actual = 0  # velocidad real usada (para suavizar)
+        self.velocidad_actual = 0 
         self.moviendo = True
         self.activo = True  # inicializar activo
 
@@ -77,10 +77,8 @@ class Vehiculo:
 
         for s in semaforos_linea:
             
-            # --- 1. FILTRO DE ZONA (¡LA SOLUCIÓN A TU PROBLEMA!) ---
-            # Ignoramos los semáforos que están "al otro lado" del cruce.
-            # Solo obedecemos los de entrada.
-            
+            # --- 1. FILTRO DE ZONA  ---
+            # Ignorar los semáforos que están "al otro lado" del cruce.            
             if self.linea == "H":
                 # Autos hacia el Este (E): Solo obedecen semáforos a la IZQUIERDA del centro
                 if self.direccion == "E" and s.x > CENTRO_X:
@@ -97,7 +95,7 @@ class Vehiculo:
                 if self.direccion == "N" and s.y < CENTRO_Y:
                     continue
 
-            # --- 2. FILTRO DE POSICIÓN (Lo que ya tenías) ---
+            # --- 2. FILTRO DE POSICIÓN ---
             # Si ya pasé el semáforo, lo ignoro.
             
             if self.linea == "H":
@@ -116,7 +114,7 @@ class Vehiculo:
                     if s.y > self.y: continue
                     semaforos_relevantes.append(s)
 
-        # Si no hay semáforos relevantes (porque ya pasé el de entrada y el de salida lo ignoro),
+        # Si no hay semáforos relevantes
         # entonces ACELERO para salir del cruce.
         if not semaforos_relevantes:
             self.semaforo_cercano = None
@@ -124,7 +122,7 @@ class Vehiculo:
             self.velocidad = self.velocidad_normal
             return
 
-        # --- 3. CALCULO DE DISTANCIA (Igual que antes) ---
+        # --- 3. CALCULO DE DISTANCIA ---
         closest = min(semaforos_relevantes, key=lambda s: math.hypot(self.x - s.x, self.y - s.y))
         distancia = math.hypot(self.x - closest.x, self.y - closest.y)
         
@@ -161,5 +159,5 @@ class Vehiculo:
             "tipo": self.tipo,
             "linea": self.linea,
             "posicion": (self.x, self.y),
-            "direccion": self.direccion  # corregido
+            "direccion": self.direccion
         }
