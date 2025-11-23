@@ -11,7 +11,7 @@ DESTINO = (SERVER_IP, SERVER_PORT)
 # ==========================
 # CONFIG DEL "VEHÍCULO"
 # ==========================
-VEHICLE_ID = "car"     # ID único para este vehículo
+VEHICLE_ID = "gurt"     # ID único para este vehículo
 TIPO = "normal"        # "normal" o "emergencia"
 LINEA = "V"            # "H" o "V"
 DIRECCION = "S"        # Para H: "E", "W". Para V: "N", "S"
