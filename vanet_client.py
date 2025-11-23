@@ -6,54 +6,45 @@ import time
 # ==========================
 # CONFIGURACIÓN DEL SERVIDOR
 # ==========================
-SERVER_IP = "44.214.110.153"   # IP pública de tu EC2
-SERVER_PORT = 9999             # Mismo puerto que usa controlador.py
+SERVER_IP = "44.214.110.153"   # IP pública de la instancia EC2
+SERVER_PORT = 9999             # Puerto del controlador
 DESTINO = (SERVER_IP, SERVER_PORT)
 
 # ==========================
-# CONFIG DEL "VEHÍCULO"
+# CONFIG DEL VEHÍCULO
 # ==========================
-VEHICLE_ID = "gurt"     # ID único para este vehículo
+VEHICLE_ID = "car"    # ID único
 TIPO = "normal"        # "normal" o "emergencia"
 LINEA = "V"            # "H" o "V"
 DIRECCION = "S"        # Para H: "E", "W". Para V: "N", "S"
 
 ANCHO = 800
 ALTO = 600
-
-# Velocidad del vehículo (pixeles por paso)
 VELOCIDAD = 2
 
 
 def posicion_inicial(linea: str, direccion: str):
-    """
-    Devuelve (x, y) de inicio según la línea y dirección,
-    usando las mismas posiciones que tu simulador.py.
-    """
     if linea == "H":
         if direccion == "E":
-            # De izquierda a derecha
             return -20, 270
         elif direccion == "W":
-            # De derecha a izquierda
             return ANCHO + 20, 330
         else:
             raise ValueError("Para LINEA='H' la DIRECCION debe ser 'E' o 'W'")
+
     elif linea == "V":
         if direccion == "S":
-            # De arriba hacia abajo
             return 340, -20
         elif direccion == "N":
-            # De abajo hacia arriba
             return 450, ALTO + 20
         else:
             raise ValueError("Para LINEA='V' la DIRECCION debe ser 'N' o 'S'")
+
     else:
         raise ValueError("LINEA debe ser 'H' o 'V'")
 
 
-def enviar_estado(sock, x, y):
-    """Construye y envía el mensaje del vehículo al controlador."""
+def enviar_estado(sock, x, y, imprimir=False):
     mensaje = {
         "tipo_mensaje": "VEHICULO",
         "id": VEHICLE_ID,
@@ -62,26 +53,30 @@ def enviar_estado(sock, x, y):
         "direccion": DIRECCION,
         "posicion": [x, y],
     }
+
     datos = json.dumps(mensaje).encode("utf-8")
     sock.sendto(datos, DESTINO)
-    print(f"Enviado: {mensaje}")
+
+    if imprimir:
+        print(f"Vehículo enviado una sola vez: {mensaje}")
 
 
 def main():
-    # Crear socket UDP
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    print(f"Iniciando VANET client hacia {SERVER_IP}:{SERVER_PORT} con ID={VEHICLE_ID}")
-    print(f"LINEA={LINEA}, DIRECCION={DIRECCION}, TIPO={TIPO}")
 
-    # Posición inicial según línea/dirección
+    # Obtener posición inicial
     x, y = posicion_inicial(LINEA, DIRECCION)
+
+    print(f"Iniciando VANET client hacia {SERVER_IP}:{SERVER_PORT}")
+    print(f"Vehículo {VEHICLE_ID} creado | Línea={LINEA} | Dirección={DIRECCION} | Tipo={TIPO}")
+    print(f"Posición inicial: ({x}, {y})\n")
+
+    # ⭐ Primer envío: se imprime SOLO una vez
+    enviar_estado(sock, x, y, imprimir=True)
 
     try:
         while True:
-            # Enviar estado actual
             enviar_estado(sock, x, y)
-
-            # Actualizar posición según la dirección
             if DIRECCION == "E":
                 x += VELOCIDAD
             elif DIRECCION == "W":
@@ -90,17 +85,15 @@ def main():
                 y += VELOCIDAD
             elif DIRECCION == "N":
                 y -= VELOCIDAD
-
-            # Si se sale de la zona visible, terminamos
             if x < -60 or x > 860 or y < -60 or y > 660:
-                print("Vehículo salió del área de simulación. Fin del cliente.")
+                print("Vehículo salió de la simulación. Cliente finalizado.")
                 break
 
-            # ~30 FPS
             time.sleep(1 / 30)
 
     except KeyboardInterrupt:
         print("\nCliente detenido por el usuario.")
+
     finally:
         sock.close()
 
