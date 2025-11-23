@@ -8,7 +8,7 @@ from interfaz import dibujar_cruce
 # --- Configuración de Red ---
 DESTINO = (config.HOST, config.PORT)
 
-# Creamos socket UDP para el visualizador
+# Crear socket UDP para el visualizador
 sock_viz = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sock_viz.settimeout(0.1) 
 
@@ -32,24 +32,18 @@ def cargar_assets():
     """Carga las imágenes de la carpeta assets y genera las rotaciones específicas."""
     try:
         # 1. Cargar imágenes base
-        # IMPORTANTE: 
-        # - auto.png debe mirar hacia ABAJO (Sur)
-        # - ambula.png debe mirar hacia IZQUIERDA (Oeste)
         img_auto = pygame.image.load("assets/auto.png")      
         img_ambula = pygame.image.load("assets/ambula.png")  
 
         # 2. Escalar
-        # Ajustamos dimensiones. El auto es vertical (24x48), la ambula es horizontal (52x28)
         TAMANO_AUTO = (50, 40)  
         TAMANO_AMBULA_BASE = (40, 60) 
 
         img_auto = pygame.transform.scale(img_auto, TAMANO_AUTO)
         img_ambula = pygame.transform.scale(img_ambula, TAMANO_AMBULA_BASE)
 
-        # 3. Generar rotaciones
-        # Pygame rota en sentido ANTI-HORARIO (contrario al reloj).
-        
-        # --- AUTO (Base: Mira al SUR/Abajo) ---
+        # 3. Generar rotaciones        
+        # --- AUTO ---
         IMAGENES_VEHICULOS["normal"] = {
             "S": img_auto,                                  # 0º (Base)
             "E": pygame.transform.rotate(img_auto, 90),     # Abajo -> Derecha (+90º)
@@ -57,7 +51,7 @@ def cargar_assets():
             "W": pygame.transform.rotate(img_auto, 270)     # Abajo -> Izquierda
         }
         
-        # --- AMBULANCIA (Base: Mira al OESTE/Izquierda) ---
+        # --- AMBULANCIA ---
         IMAGENES_VEHICULOS["emergencia"] = {
             "W": img_ambula,                                # 0º (Base)
             "S": pygame.transform.rotate(img_ambula, 90),   # Izquierda -> Abajo (+90º)

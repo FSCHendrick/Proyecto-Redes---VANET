@@ -1,4 +1,3 @@
-# visualizador_flask.py
 import socket
 import json
 import time
@@ -8,32 +7,23 @@ import sys
 import config
 from flask import Flask, jsonify, render_template
 
-# ---------------------------
 # LEER PUERTOS DESDE ARGUMENTOS
-# ---------------------------
-# Uso:
-#   python visualizador_flask.py <PUERTO_UDP_CONTROLADOR> <PUERTO_HTTP_FLASK>
-#
-# Ejemplo:
-#   python visualizador_flask.py 9999 5000
-#   python visualizador_flask.py 10000 5001
 
 if len(sys.argv) >= 2:
     UDP_PORT = int(sys.argv[1])
 else:
-    UDP_PORT = config.PORT  # por defecto lo que tengas en config
+    UDP_PORT = config.PORT 
 
 if len(sys.argv) >= 3:
     HTTP_PORT = int(sys.argv[2])
 else:
-    HTTP_PORT = 5000  # por defecto 5000
+    HTTP_PORT = 5000
 
 HOST_VIZ = config.HOST
 DESTINO = (HOST_VIZ, UDP_PORT)
 
 print(f"[VIZ] Me conectaré al controlador en {DESTINO} (UDP) y serviré Flask en puerto HTTP {HTTP_PORT}")
 
-# Flask sirve /assets/... como estático
 app = Flask(__name__, static_folder='assets', static_url_path='/assets')
 
 # --- ESTADO COMPARTIDO ---

@@ -1,6 +1,6 @@
 import socket
 import json
-import config # <--- IMPORTAR
+import config
 
 # --- Socket del Cliente (Global) ---
 try:

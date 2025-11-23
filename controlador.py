@@ -8,7 +8,7 @@ SERVER_ADDRESS = (config.HOST, config.PORT)
 
 # --- Constantes ---
 config.SEGUNDOS_TIMEOUT_VEHICULO = 3.0 
-config.DURACION_LUZ_VERDE = 5.0  # (NUEVO) Tiempo que dura el semáforo en verde normal
+config.DURACION_LUZ_VERDE = 5.0
 
 # --- ESTADO GLOBAL ---
 estado_global_vehiculos = {}
@@ -23,8 +23,7 @@ tiempo_ultimo_cambio = time.time()
 
 # --- Funciones del Algoritmo (R4 y R5) ---
 def ejecutar_algoritmo_smart(vehiculos, semaforos):
-    global tiempo_ultimo_cambio # Necesario para modificar la variable de tiempo
-    
+    global tiempo_ultimo_cambio 
     # 1. R5: Prioridad de Emergencia
     emergencia_detectada_H = False
     emergencia_detectada_V = False
@@ -32,7 +31,6 @@ def ejecutar_algoritmo_smart(vehiculos, semaforos):
     for vid, datos_v in vehiculos.items():
         if datos_v["tipo"] == "emergencia":
             linea = datos_v.get("linea")
-            # print(f"[DEBUG] Ambulancia detectada. ID: {vid}, Linea recibida: {linea}")
             if linea == "H":
                 emergencia_detectada_H = True
             elif linea == "V":
@@ -50,12 +48,11 @@ def ejecutar_algoritmo_smart(vehiculos, semaforos):
         tiempo_ultimo_cambio = time.time()
         return 
 
-    # 2. R4: Lógica Normal (Ciclo de Tiempo) --- ¡AQUÍ ESTABA EL PROBLEMA! ---
+    # 2. R4: Lógica Normal (Ciclo de Tiempo)
     # Si NO hay emergencias, alternamos las luces por tiempo.
     
     ahora = time.time()
     if ahora - tiempo_ultimo_cambio > config.DURACION_LUZ_VERDE:
-        # ¡Ha pasado el tiempo! Toca cambio de luces.
         if semaforos["H"] == "verde":
             semaforos["H"] = "rojo"
             semaforos["V"] = "verde"

@@ -9,7 +9,7 @@ pygame.init()
 pantalla = pygame.display.set_mode((ANCHO, ALTO))
 pygame.display.set_caption("Simulación VANET - Smart City")
 
-# Crear semáforos (posición aproximada del cruce)
+# Crear semáforos
 semaforos = [
     Semaforo(1, 300, 300, "verde", "H"),
     Semaforo(2, 500, 300, "verde", "H"),

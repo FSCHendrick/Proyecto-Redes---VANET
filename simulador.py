@@ -27,9 +27,8 @@ config.intervalo_spawn = 2.0
 config.max_vehiculos = 15
 
 # Configurar socket para RECIBIR respuesta del controlador
-# (El protocolo.py ya tiene un socket, pero aquí necesitamos recibir explícitamente)
 sock_sim = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-sock_sim.settimeout(0.05) # Timeout muy corto para no bloquear la simulación
+sock_sim.settimeout(0.05)
 
 print("Iniciando simulador de vehículos...")
 print(f"Enviando datos a {ProtocoloVANET.DESTINO}")
@@ -40,7 +39,7 @@ try:
 
         # --- 1. SINCRONIZAR SEMÁFOROS CON EL CONTROLADOR (NUEVO) ---
         try:
-            # A. Preguntar al controlador: "¿Cómo están las luces?"
+            # A. Preguntar al controlador
             solicitud = {"tipo_mensaje": "SOLICITUD_LUCES"}
             sock_sim.sendto(json.dumps(solicitud).encode('utf-8'), ProtocoloVANET.DESTINO)
             
@@ -52,18 +51,18 @@ try:
             estado_luces = respuesta.get("semaforos", {})
             
             # C. Actualizar nuestros objetos Semaforo locales
-            # Si el controlador dice H='rojo', ponemos todos los H en rojo.
+            # Si el controlador dice H='rojo', todos los H en rojo.
             for s in semaforos:
                 if s.linea in estado_luces:
                     s.estado = estado_luces[s.linea]
                     
         except socket.timeout:
-            pass # Si el controlador está ocupado, seguimos con el estado anterior
+            pass
         except Exception as e:
             print(f"Error al sincronizar luces: {e}")
 
 
-        # --- 2. LOGICA DE VEHÍCULOS (Igual que antes) ---
+        # --- 2. LOGICA DE VEHÍCULOS ---
         if len(vehiculos) < config.max_vehiculos and (time_now - ultimo_spawn) > config.intervalo_spawn:
             tipo = random.choice(tipos)
             dir = random.choice(direcciones)
@@ -83,7 +82,6 @@ try:
 
         # Mover y Enviar
         for v in vehiculos:
-            # ¡AHORA SÍ! 'semaforos' tiene el estado real del controlador
             v.detectar_semaforo(semaforos) 
             v.mover(vehiculos)
             

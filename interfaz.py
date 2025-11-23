@@ -3,7 +3,7 @@ import config
 
 def dibujar_cruce(pantalla, vehiculos, semaforos, imagenes_dict=None):
     # 1. FONDO (Césped)
-    pantalla.fill((34, 139, 34))  # "Forest Green"
+    pantalla.fill((34, 139, 34))
 
     # 2. CALLES (Asfalto)
     color_asfalto = (50, 50, 50)
@@ -83,7 +83,6 @@ def dibujar_semaforo_estilizado(pantalla, s):
         color_luz = (255, 0, 0)
 
     # Dibujar CAJA del semáforo (Negra rectangular)
-    # Ajustamos un poco la posición para que la caja quede centrada respecto al círculo original
     caja_rect = pygame.Rect(s.x - 10, s.y - 10, 20, 20)
     pygame.draw.rect(pantalla, (20, 20, 20), caja_rect, border_radius=5)
     
@@ -117,7 +116,7 @@ def dibujar_vehiculo_individual(pantalla, v, imagenes):
 
     # ID siempre visible
     font = pygame.font.Font(None, 18)
-    text_sombra = font.render(str(v.id)[-4:], True, (0,0,0)) # Solo últimos 4 dígitos
+    text_sombra = font.render(str(v.id)[-4:], True, (0,0,0))
     text_blanco = font.render(str(v.id)[-4:], True, (255,255,255))
     pantalla.blit(text_sombra, (v.x + 1, v.y - 30))
     pantalla.blit(text_blanco, (v.x, v.y - 31))
