@@ -239,14 +239,18 @@
 
   // Loop de red: pide /estado cada 100 ms
   async function loopFetch() {
-  try {
-    const res = await fetch("/estado");
-    ultimoEstado = await res.json();
-  } catch(e) {
-    console.error("Error en fetch:", e);
+    try {
+      const res = await fetch("/estado");
+      const data = await res.json();
+      ultimoEstado = data; 
+    } catch(e) {
+      console.error("Error en fetch:", e);
+      info.textContent = "Error al obtener estado del controlador";
+    } finally {
+      setTimeout(loopFetch, 100);  // <-- aquí el cambio
+    }
   }
-  setTimeout(loopFetch, 200); // <--- poll cada 200 ms
-  }
+
 
   // Fallback por si onload no se dispara (caché, etc.)
   setTimeout(() => {
