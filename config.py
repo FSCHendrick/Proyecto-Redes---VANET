@@ -15,6 +15,4 @@ SEGUNDOS_TIMEOUT_VEHICULO = 3.0 # Tiempo para borrar "fantasmas"
 MAX_VEHICULOS = 15
 INTERVALO_SPAWN = 2.0           # Segundos entre cada auto nuevo
 
-# Para correr, crear tres terminales: 1. servidor (controlador.py), 2. cliente (simulador.py), y 3. visualizador.py
-# Orden de Ejecucion: 1. Servidor, 2. Visualizador, 3. Cliente (Salir: Ctrl + C)
 last_vehicle_id = 0
