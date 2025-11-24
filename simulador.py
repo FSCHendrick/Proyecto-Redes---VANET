@@ -37,7 +37,7 @@ try:
     while True:
         time_now = time.time()
 
-        # --- 1. SINCRONIZAR SEMÁFOROS CON EL CONTROLADOR (NUEVO) ---
+        # --- 1. SINCRONIZAR SEMÁFOROS CON EL CONTROLADOR ---
         try:
             # A. Preguntar al controlador
             solicitud = {"tipo_mensaje": "SOLICITUD_LUCES"}
