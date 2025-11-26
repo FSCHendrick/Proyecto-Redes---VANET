@@ -3,15 +3,13 @@ import json
 import time
 
 # CONFIGURACIÓN DEL SERVIDOR
-# ==========================
 SERVER_IP = "44.214.110.153"   # IP pública de tu EC2
 SERVER_PORT = 9999             # Mismo puerto que usa controlador.py
 DESTINO = (SERVER_IP, SERVER_PORT)
 
-# ==========================
+
 # CONFIG DEL "VEHÍCULO"
-# ==========================
-VEHICLE_ID = "gurt"     # ID único para este vehículo
+VEHICLE_ID = "car"     # ID único para este vehículo
 TIPO = "normal"        # "normal" o "emergencia"
 LINEA = "V"            # "H" o "V"
 DIRECCION = "S"        # Para H: "E", "W". Para V: "N", "S"
@@ -19,7 +17,6 @@ DIRECCION = "S"        # Para H: "E", "W". Para V: "N", "S"
 ANCHO = 800
 ALTO = 600
 VELOCIDAD = 2
-
 
 def posicion_inicial(linea: str, direccion: str):
     if linea == "H":
@@ -29,7 +26,6 @@ def posicion_inicial(linea: str, direccion: str):
             return ANCHO + 20, 330
         else:
             raise ValueError("Para LINEA='H' la DIRECCION debe ser 'E' o 'W'")
-
     elif linea == "V":
         if direccion == "S":
             return 340, -20
@@ -37,7 +33,6 @@ def posicion_inicial(linea: str, direccion: str):
             return 450, ALTO + 20
         else:
             raise ValueError("Para LINEA='V' la DIRECCION debe ser 'N' o 'S'")
-
     else:
         raise ValueError("LINEA debe ser 'H' o 'V'")
 
